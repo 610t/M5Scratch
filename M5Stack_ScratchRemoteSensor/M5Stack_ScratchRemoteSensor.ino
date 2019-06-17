@@ -37,8 +37,11 @@
 #include <WiFi.h>
 #include <M5Stack.h>
 #include <Wire.h>
+#include "utility/MPU9250.h"
+#include "utility/quaternionFilters.h"
 
 #define FACES_KEYBOARD_I2C_ADDR 0x08
+MPU9250 IMU;
 
 const char* ssid     = "SSID";
 const char* password = "PASSWORD";
@@ -89,6 +92,15 @@ void setup() {
   Wire.begin();
   pinMode(5, INPUT);
   digitalWrite(5, HIGH);
+
+  // Accel
+  byte c = IMU.readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250);
+  IMU.MPU9250SelfTest(IMU.SelfTest);
+  IMU.calibrateMPU9250(IMU.gyroBias, IMU.accelBias);
+
+  IMU.initMPU9250();
+  byte d = IMU.readByte(AK8963_ADDRESS, WHO_AM_I_AK8963);
+  IMU.initAK8963(IMU.magCalibration);
 
   delay(5000);
 }
@@ -235,8 +247,8 @@ void loop() {
       M5.Lcd.println("{RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")}");
       Serial.println("{RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")}");
       // msg
-      M5.Lcd.setCursor(0, 120);
-      M5.Lcd.setTextSize(5);
+      //M5.Lcd.setCursor(0, 100);
+      //M5.Lcd.setTextSize(5);
       M5.Lcd.println("{s:" + s + "}");
     } else {
       Serial.println("NOP");
@@ -269,7 +281,25 @@ void loop() {
     }
   }
 
-
   // sensor-update
   sensor_update(client, "v", String(random(0, 255)));
+
+  // sensor-update by accel
+  if (IMU.readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01)
+  {
+    IMU.readAccelData(IMU.accelCount);  // Read the x/y/z adc values
+    IMU.getAres();
+
+    // Now we'll calculate the accleration value into actual g's
+    // This depends on scale being set
+    IMU.ax = (float)IMU.accelCount[0] * IMU.aRes; // - accelBias[0];
+    IMU.ay = (float)IMU.accelCount[1] * IMU.aRes; // - accelBias[1];
+    IMU.az = (float)IMU.accelCount[2] * IMU.aRes; // - accelBias[2];
+
+    sensor_update(client, "ax", String(-1 * 240 * IMU.ax));
+    sensor_update(client, "ay", String(-1 * 180 * IMU.ay));
+    sensor_update(client, "az", String(1000 * IMU.az));
+    M5.Lcd.setTextSize(2);
+    M5.Lcd.println("{ax,ay,az:(" + String(IMU.ax) + ", " + String(IMU.ay) + ", " + String(IMU.az) + ")}");
+  }
 }
