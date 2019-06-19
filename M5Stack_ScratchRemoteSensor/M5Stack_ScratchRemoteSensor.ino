@@ -83,8 +83,6 @@ void setup() {
   WiFiSetup();
 
   M5.Lcd.println("WiFi connected.");
-  M5.Lcd.print("My IP:" + WiFi.localIP());
-  M5.Lcd.println("Host IP:" + String(host));
 
   Serial.println("Wifi OK");
 
