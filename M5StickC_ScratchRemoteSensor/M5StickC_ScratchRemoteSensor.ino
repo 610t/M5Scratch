@@ -252,9 +252,12 @@ void loop() {
   // broadcast
   broadcast(client, "test");
   // broadcast by button
-  //  if (M5.BtnA.isPressed()) {
-  //    broadcast(client, "BtnA");
-  //  }
+  if (digitalRead(M5_BUTTON_HOME) == LOW) {
+    broadcast(client, "BtnA");
+  }
+  if (digitalRead(M5_BUTTON_RST) == LOW) {
+    broadcast(client, "BtnB");
+  }
 
   // sensor-update
   sensor_update(client, "v", String(random(0, 255)));
