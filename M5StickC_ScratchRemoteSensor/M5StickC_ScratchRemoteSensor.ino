@@ -35,19 +35,15 @@
 */
 
 #include <WiFi.h>
-#include <M5Stack.h>
+#include <M5StickC.h>
 #include <Wire.h>
-#include "utility/MPU9250.h"
-#include "utility/quaternionFilters.h"
-
-#define FACES_KEYBOARD_I2C_ADDR 0x08
-MPU9250 IMU;
 
 const char* ssid     = "SSID";
 const char* password = "PASSWORD";
 const char* host     = "Scratch Host IP";
 
 const int Port = 42001;
+WiFiClient client;
 
 void WiFiSetup() {
   if (WiFi.status() == WL_CONNECTED) {
@@ -93,13 +89,14 @@ void setup() {
   digitalWrite(5, HIGH);
 
   // Accel
-  byte c = IMU.readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250);
-  IMU.MPU9250SelfTest(IMU.SelfTest);
-  IMU.calibrateMPU9250(IMU.gyroBias, IMU.accelBias);
 
-  IMU.initMPU9250();
-  byte d = IMU.readByte(AK8963_ADDRESS, WHO_AM_I_AK8963);
-  IMU.initAK8963(IMU.magCalibration);
+  // LED
+  pinMode(M5_LED, OUTPUT);
+  digitalWrite(M5_LED, LOW);
+
+  // Button
+  pinMode(M5_BUTTON_HOME, INPUT);
+  pinMode(M5_BUTTON_RST, INPUT);
 
   delay(5000);
 }
@@ -145,16 +142,11 @@ void sensor_update(WiFiClient client, String varName, String varValue) {
   }
 }
 
-WiFiClient client;
-
 void loop() {
   uint8_t buffer[128] = {0};
   int r = 0, g = 0, b = 0;
   String s;
   char* str;
-
-  M5.update();
-  delay(10);
 
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println("WiFi status Ok:");
@@ -170,6 +162,7 @@ void loop() {
   Serial.print("create tcp ok\r\n");
 
   while (!client.connected()) {
+    erial.print("client not connected retry WiFiSetup");
     WiFiSetup();
     client.connect(host, Port);
   }
@@ -259,47 +252,13 @@ void loop() {
 
   // broadcast
   broadcast(client, "test");
-  if (M5.BtnA.isPressed()) {
-    broadcast(client, "BtnA");
-  }
-  if (M5.BtnB.isPressed()) {
-    broadcast(client, "BtnB");
-  }
-  if (M5.BtnC.isPressed()) {
-    broadcast(client, "BtnC");
-  }
-
-  // keyboard input
-  if (digitalRead(5) == LOW)
-  {
-    Wire.requestFrom(FACES_KEYBOARD_I2C_ADDR, 1);
-    while (Wire.available())
-    {
-      char c = Wire.read(); // receive a byte as character
-      Serial.print(c);         // print the character
-      broadcast(client, "Key_" + String(c));
-    }
-  }
+// broadcast by button
+//  if (M5.BtnA.isPressed()) {
+//    broadcast(client, "BtnA");
+//  }
 
   // sensor-update
   sensor_update(client, "v", String(random(0, 255)));
 
   // sensor-update by accel
-  if (IMU.readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01)
-  {
-    IMU.readAccelData(IMU.accelCount);  // Read the x/y/z adc values
-    IMU.getAres();
-
-    // Now we'll calculate the accleration value into actual g's
-    // This depends on scale being set
-    IMU.ax = (float)IMU.accelCount[0] * IMU.aRes; // - accelBias[0];
-    IMU.ay = (float)IMU.accelCount[1] * IMU.aRes; // - accelBias[1];
-    IMU.az = (float)IMU.accelCount[2] * IMU.aRes; // - accelBias[2];
-
-    sensor_update(client, "ax", String(-1 * 240 * IMU.ax));
-    sensor_update(client, "ay", String(-1 * 180 * IMU.ay));
-    sensor_update(client, "az", String(1000 * IMU.az));
-    M5.Lcd.setTextSize(2);
-    M5.Lcd.println("{ax,ay,az:(" + String(IMU.ax) + ", " + String(IMU.ay) + ", " + String(IMU.az) + ")}");
-  }
 }
