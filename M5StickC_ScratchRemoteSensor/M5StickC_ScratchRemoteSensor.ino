@@ -89,6 +89,7 @@ void setup() {
   digitalWrite(5, HIGH);
 
   // Accel
+  M5.IMU.Init();
 
   // LED
   pinMode(M5_LED, OUTPUT);
@@ -162,7 +163,7 @@ void loop() {
   Serial.print("create tcp ok\r\n");
 
   while (!client.connected()) {
-    erial.print("client not connected retry WiFiSetup");
+    Serial.print("client not connected retry WiFiSetup");
     WiFiSetup();
     client.connect(host, Port);
   }
@@ -198,7 +199,6 @@ void loop() {
       msg.replace("broadcast ", "");
       msg.replace("\"", "");
       Serial.println("{broadcast:" + msg + "}");
-      M5.Lcd.setTextSize(3);
       M5.Lcd.println("{broadcast:" + msg + "}");
     } else if (msg.startsWith("sensor-update")) {
       // value
@@ -236,7 +236,6 @@ void loop() {
       // RGB background
       M5.Lcd.fillScreen(uint16_t (((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3) ));
 
-      M5.Lcd.setTextSize(2);
       M5.Lcd.println("{RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")}");
       Serial.println("{RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")}");
       // msg
@@ -252,13 +251,28 @@ void loop() {
 
   // broadcast
   broadcast(client, "test");
-// broadcast by button
-//  if (M5.BtnA.isPressed()) {
-//    broadcast(client, "BtnA");
-//  }
+  // broadcast by button
+  //  if (M5.BtnA.isPressed()) {
+  //    broadcast(client, "BtnA");
+  //  }
 
   // sensor-update
   sensor_update(client, "v", String(random(0, 255)));
 
   // sensor-update by accel
+  int16_t accX = 0;
+  int16_t accY = 0;
+  int16_t accZ = 0;
+  float ax = 0;
+  float ay = 0;
+  float az = 0;
+
+  M5.IMU.getAccelData(&accX, &accY, &accZ);
+  ax = (float)accX * M5.IMU.aRes;
+  ay = (float)accY * M5.IMU.aRes;
+  az = (float)accZ * M5.IMU.aRes;
+  sensor_update(client, "ax", String(-1 * 240 * ax));
+  sensor_update(client, "ay", String(-1 * 180 * ay));
+  sensor_update(client, "az", String(1000 * az));
+  M5.Lcd.println("{ax,ay,az:(" + String(ax) + ", " + String(ay) + ", " + String(az) + ")}");
 }
