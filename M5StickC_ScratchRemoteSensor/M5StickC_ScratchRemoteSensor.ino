@@ -222,6 +222,10 @@ void loop() {
           case 's':
             s = getValue('s', msg);
             break;
+          case 'l':
+            int led =  int(getValue('l', msg).toFloat());
+            digitalWrite(M5_LED, led);
+            break;
         }
         Serial.println("{{msg:" + msg + "}}");
 
