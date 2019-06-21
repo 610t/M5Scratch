@@ -278,4 +278,16 @@ void loop() {
   sensor_update(client, "ay", String(-1 * 180 * ay));
   sensor_update(client, "az", String(1000 * az));
   M5.Lcd.println("{ax,ay,az:(" + String(ax) + ", " + String(ay) + ", " + String(az) + ")}");
+
+  // sensor-update by gyro
+  int16_t gyroX = 0;
+  int16_t gyroY = 0;
+  int16_t gyroZ = 0;
+
+  M5.IMU.getGyroData(&gyroX, &gyroY, &gyroZ);
+  sensor_update(client, "gx", String(gyroX));
+  sensor_update(client, "gy", String(gyroY));
+  sensor_update(client, "gz", String(gyroZ));
+  M5.Lcd.println("{gx,gy,gz:(" + String(gyroX) + ", " + String(gyroY) + ", " + String(gyroZ) + ")}");
+
 }
