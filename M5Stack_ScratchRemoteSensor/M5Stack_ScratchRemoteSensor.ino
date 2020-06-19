@@ -7,7 +7,7 @@
 */
 
 /*
-  Copyright 2016,2019 Takeshi MUTOH
+  Copyright 2016,2019-2020 Takeshi MUTOH
 
   Redistribution and use in source and binary forms, with or without modification,
   are permitted provided that the following conditions are met:
@@ -57,6 +57,7 @@ void WiFiSetup() {
     Serial.println("Wifi start.");
   }
 
+  WiFi.disconnect();
   WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED) {
@@ -144,6 +145,8 @@ void sensor_update(WiFiClient client, String varName, String varValue) {
   }
 }
 
+WiFiClient client;
+
 void loop() {
   uint8_t buffer[128] = {0};
   int r = 0, g = 0, b = 0;
@@ -160,7 +163,6 @@ void loop() {
   }
 
   // Use WiFiClient class to create TCP connections
-  WiFiClient client;
   if (!client.connect(host, Port)) {
     Serial.println("connection failed");
     return;
@@ -258,13 +260,13 @@ void loop() {
   // broadcast
   broadcast(client, "test");
   if (M5.BtnA.isPressed()) {
-    broadcast(client, "BtnA");
+    broadcast(client, "BtnA1");
   }
   if (M5.BtnB.isPressed()) {
-    broadcast(client, "BtnB");
+    broadcast(client, "BtnB1");
   }
   if (M5.BtnC.isPressed()) {
-    broadcast(client, "BtnC");
+    broadcast(client, "BtnC1");
   }
 
   // keyboard input
@@ -280,7 +282,7 @@ void loop() {
   }
 
   // sensor-update
-  sensor_update(client, "v", String(random(0, 255)));
+  sensor_update(client, "v1", String(random(0, 255)));
 
   // sensor-update by accel
   if (IMU.readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01)
@@ -294,9 +296,9 @@ void loop() {
     IMU.ay = (float)IMU.accelCount[1] * IMU.aRes; // - accelBias[1];
     IMU.az = (float)IMU.accelCount[2] * IMU.aRes; // - accelBias[2];
 
-    sensor_update(client, "ax", String(-1 * 240 * IMU.ax));
-    sensor_update(client, "ay", String(-1 * 180 * IMU.ay));
-    sensor_update(client, "az", String(1000 * IMU.az));
+    sensor_update(client, "ax1", String(-1 * 240 * IMU.ax));
+    sensor_update(client, "ay1", String(-1 * 180 * IMU.ay));
+    sensor_update(client, "az1", String(1000 * IMU.az));
     M5.Lcd.setTextSize(2);
     M5.Lcd.println("{ax,ay,az:(" + String(IMU.ax) + ", " + String(IMU.ay) + ", " + String(IMU.az) + ")}");
   }
