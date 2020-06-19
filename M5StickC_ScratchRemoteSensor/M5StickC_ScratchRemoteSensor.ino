@@ -7,7 +7,7 @@
 */
 
 /*
-  Copyright 2016,2019 Takeshi MUTOH
+  Copyright 2016,2019-2020 Takeshi MUTOH
 
   Redistribution and use in source and binary forms, with or without modification,
   are permitted provided that the following conditions are met:
@@ -43,24 +43,25 @@ const char* password = "PASSWORD";
 const char* host     = "Scratch Host IP";
 
 const int Port = 42001;
-WiFiClient client;
+//WiFiClient client;
 
 void WiFiSetup() {
-  if (WiFi.status() == WL_CONNECTED) {
-    WiFi.disconnect();
-    Serial.println("Wifi restart.");
-  } else {
-    Serial.println("Wifi start.");
-  }
-
+wifisetup:
+  Serial.println("Wifi begin.");
   WiFi.disconnect();
   WiFi.begin(ssid, password);
+  Serial.println("End of Wifi begin.");
 
+  int c = 0;
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     M5.Lcd.print(".");
+    Serial.print(".");
+    if (c > 10) goto wifisetup;
+    c += 1;
   }
   M5.Lcd.println("");
+  Serial.println("End of WiFiSetup()");
 }
 
 void setup() {
@@ -99,7 +100,7 @@ void setup() {
   pinMode(M5_BUTTON_HOME, INPUT);
   pinMode(M5_BUTTON_RST, INPUT);
 
-  delay(5000);
+  delay(1000);
 }
 
 String getValue(char name, String msg) {
@@ -149,33 +150,46 @@ void loop() {
   String s;
   char* str;
 
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("WiFi status Ok:");
-  } else {
+  // Reconnect to WiFi
+  while (!(WiFi.status() == WL_CONNECTED)) {
     Serial.println("WiFi not connected");
+    WiFiSetup();
   }
 
   // Use WiFiClient class to create TCP connections
-  if (!client.connect(host, Port)) {
+  WiFiClient client;
+
+  Serial.println("Before client connect");
+  while (!client.connect(host, Port)) {
     Serial.println("connection failed");
-    return;
   }
-  Serial.print("create tcp ok\r\n");
+  Serial.println("create tcp ok");
 
   while (!client.connected()) {
-    Serial.print("client not connected retry WiFiSetup");
+    Serial.println("client not connected retry WiFiSetup");
     WiFiSetup();
+    Serial.println("Stop connection");
+    client.stop();
+    Serial.println("Before client.connect");
+    client.setTimeout(100);
     client.connect(host, Port);
+    Serial.println("After client.connect");
   }
+  Serial.println("Client connected");
 
   // Read all from server and print them to Serial.
   uint32_t len = 0;
   String msg = "";
   char *c;
 
+  Serial.println("Let us go to read messages.");
+
   //// Receive msg
+  len = 0;
   client.setTimeout(100);
+  //  if (client.available() > 0) {
   len = client.readBytes(buffer, sizeof(buffer));
+  //  }
 
   Serial.println("Get length:" + String(len));
 
@@ -191,7 +205,7 @@ void loop() {
     Serial.print("]\r\n");
 
     while ((!msg.startsWith("broadcast") && !msg.startsWith("sensor-update")) && msg.length() > 0 ) {
-      msg.substring(1);
+      msg = msg.substring(1);
     }
 
     if (msg.startsWith("broadcast") == true) {
@@ -293,5 +307,7 @@ void loop() {
   sensor_update(client, "gy", String(gyroY));
   sensor_update(client, "gz", String(gyroZ));
   M5.Lcd.println("{gx,gy,gz:(" + String(gyroX) + ", " + String(gyroY) + ", " + String(gyroZ) + ")}");
+
+  client.stop();
 
 }
