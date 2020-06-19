@@ -281,17 +281,11 @@ void loop() {
   sensor_update(client, "v", String(random(0, 255)));
 
   // sensor-update by accel
-  int16_t accX = 0;
-  int16_t accY = 0;
-  int16_t accZ = 0;
   float ax = 0;
   float ay = 0;
   float az = 0;
 
-  M5.IMU.getAccelData(&accX, &accY, &accZ);
-  ax = (float)accX * M5.IMU.aRes;
-  ay = (float)accY * M5.IMU.aRes;
-  az = (float)accZ * M5.IMU.aRes;
+  M5.IMU.getAccelData(&ax, &ay, &az);
   sensor_update(client, "ax", String(-1 * 240 * ax));
   sensor_update(client, "ay", String(-1 * 180 * ay));
   sensor_update(client, "az", String(1000 * az));
@@ -302,7 +296,7 @@ void loop() {
   int16_t gyroY = 0;
   int16_t gyroZ = 0;
 
-  M5.IMU.getGyroData(&gyroX, &gyroY, &gyroZ);
+  M5.IMU.getGyroAdc(&gyroX, &gyroY, &gyroZ);
   sensor_update(client, "gx", String(gyroX));
   sensor_update(client, "gy", String(gyroY));
   sensor_update(client, "gz", String(gyroZ));
