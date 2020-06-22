@@ -34,13 +34,18 @@
    This program is demonstration that Scrath Remote Sensor Protocol with M5Stack.
 */
 
-#include <WiFi.h>=
+#include <WiFi.h>
 #include <M5StickC.h>
 #include <Wire.h>
 
-const char* ssid     = "SSID";
-const char* password = "PASSWORD";
-const char* host     = "Scratch Host IP";
+/*
+  network.h contains network information below:
+
+  const char* ssid     = "SSID";
+  const char* password = "PASSWORD";
+  const char* host     = "Scratch Host IP";
+*/
+//#include "network.h"
 
 const int Port = 42001;
 //WiFiClient client;
