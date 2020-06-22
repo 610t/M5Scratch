@@ -42,6 +42,7 @@ const char* ssid     = "SSID";
 const char* password = "PASSWORD";
 const char* host     = "Scratch Host IP";
 
+
 const int Port = 42001;
 //WiFiClient client;
 
@@ -138,9 +139,11 @@ void sensor_update(WiFiClient client, String varName, String varValue) {
   scmd[3] = (uint8_t)strlen(scmd + 4);
   client.setTimeout(100);
   if (client.write((const uint8_t*)scmd, 4 + strlen(scmd + 4))) {
-    Serial.println("sensor-update ok");
+    //Serial.println("sensor-update ok");
+    return;
   } else {
-    Serial.println("sensor-update err");
+    //Serial.println("sensor-update err");
+    return;
   }
 }
 
@@ -171,7 +174,7 @@ void loop() {
     Serial.println("Stop connection");
     client.stop();
     Serial.println("Before client.connect");
-    client.setTimeout(100);
+    //client.setTimeout(100);
     client.connect(host, Port);
     Serial.println("After client.connect");
   }
@@ -186,21 +189,22 @@ void loop() {
 
   //// Receive msg
   len = 0;
+  int av = client.available();
+  Serial.println("available:" + String(av));
+  //if (av > 0) {
   client.setTimeout(100);
-  //  if (client.available() > 0) {
   len = client.readBytes(buffer, sizeof(buffer));
-  //  }
+  //}
 
   Serial.println("Get length:" + String(len));
 
   while (len > 0) {
     M5.Lcd.setCursor(0, 0);
     Serial.print("Received:[");
-    for (uint32_t i = 0; i < len; i++) {
+    // Skip 4 byte message header and get string.
+    for (uint32_t i = 4; i < len; i++) {
       Serial.print((char)buffer[i]);
-      if (i >= 4) { // Skip 4 byte message header
-        msg += (char)buffer[i];
-      }
+      msg += (char)buffer[i];
     }
     Serial.print("]\r\n");
 
@@ -241,13 +245,13 @@ void loop() {
             digitalWrite(M5_LED, led);
             break;
         }
-        Serial.println("{{msg:" + msg + "}}");
+        //Serial.println("{{msg:" + msg + "}}");
 
         // Skip var_value
         while (msg.charAt(0) != ' ' && msg.length() > 0) {
           msg = msg.substring(1);
         }
-        Serial.println("{{msg2:" + msg + "}}");
+        //Serial.println("{{msg2:" + msg + "}}");
       }
 
       //// Output
