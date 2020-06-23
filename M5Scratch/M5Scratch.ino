@@ -391,6 +391,25 @@ void loop() {
   sensor_update(client, "gz", String(gyroZ));
   M5.Lcd.println("{gyro:(" + String(gyroX) + ", " + String(gyroY) + ", " + String(gyroZ) + ")}");
 
+#if defined(ARDUINO_M5Stack_Core_ESP32)
+  // sensor-update by magnetic value
+  float mx = 0;
+  float my = 0;
+  float mz = 0;
+
+  IMU.readMagData(IMU.magCount);
+  IMU.getMres();
+
+  mx = (float)IMU.magCount[0] * IMU.mRes;
+  my = (float)IMU.magCount[1] * IMU.mRes;
+  mz = (float)IMU.magCount[2] * IMU.mRes;
+
+  sensor_update(client, "mx", String(mx));
+  sensor_update(client, "my", String(my));
+  sensor_update(client, "mz", String(mz));
+  M5.Lcd.println("{mag:(" + String(mx) + ", " + String(my) + ", " + String(mz) + ")}");
+#endif
+
   client.stop();
 
 }
