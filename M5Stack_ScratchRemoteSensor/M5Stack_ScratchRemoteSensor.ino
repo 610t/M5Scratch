@@ -43,9 +43,14 @@
 #define FACES_KEYBOARD_I2C_ADDR 0x08
 MPU9250 IMU;
 
-const char* ssid     = "SSID";
-const char* password = "PASSWORD";
-const char* host     = "Scratch Host IP";
+/*
+  network.h contains network information below:
+
+  const char* ssid     = "SSID";
+  const char* password = "PASSWORD";
+  const char* host     = "Scratch Host IP";
+*/
+#include "network.h"
 
 const int Port = 42001;
 
