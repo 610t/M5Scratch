@@ -35,8 +35,11 @@
 */
 
 #include <WiFi.h>
-#include <M5StickC.h>
 #include <Wire.h>
+
+#if defined(ARDUINO_M5Stick_C)
+#include <M5StickC.h>
+#endif
 
 /*
   network.h contains network information below:
@@ -45,7 +48,7 @@
   const char* password = "PASSWORD";
   const char* host     = "Scratch Host IP";
 */
-//#include "network.h"
+#include "network.h"
 
 const int Port = 42001;
 //WiFiClient client;
@@ -95,15 +98,21 @@ void setup() {
   digitalWrite(5, HIGH);
 
   // Accel
+#if defined(ARDUINO_M5Stick_C)
   M5.IMU.Init();
+#endif
 
   // LED
+#if defined(ARDUINO_M5Stick_C)
   pinMode(M5_LED, OUTPUT);
   digitalWrite(M5_LED, LOW);
+#endif
 
   // Button
+#if defined(ARDUINO_M5Stick_C)
   pinMode(M5_BUTTON_HOME, INPUT);
   pinMode(M5_BUTTON_RST, INPUT);
+#endif
 
   delay(1000);
 }
@@ -246,7 +255,9 @@ void loop() {
             break;
           case 'l':
             int led =  int(getValue('l', msg).toFloat());
+#if defined(ARDUINO_M5Stick_C)
             digitalWrite(M5_LED, led);
+#endif
             break;
         }
         //Serial.println("{{msg:" + msg + "}}");
@@ -278,12 +289,14 @@ void loop() {
   // broadcast
   broadcast(client, "test");
   // broadcast by button
+#if defined(ARDUINO_M5Stick_C)
   if (digitalRead(M5_BUTTON_HOME) == LOW) {
     broadcast(client, "BtnA");
   }
   if (digitalRead(M5_BUTTON_RST) == LOW) {
     broadcast(client, "BtnB");
   }
+#endif
 
   // sensor-update
   sensor_update(client, "v", String(random(0, 255)));
@@ -293,7 +306,9 @@ void loop() {
   float ay = 0;
   float az = 0;
 
+#if defined(ARDUINO_M5Stick_C)
   M5.IMU.getAccelData(&ax, &ay, &az);
+#endif
   sensor_update(client, "ax", String(-1 * 240 * ax));
   sensor_update(client, "ay", String(-1 * 180 * ay));
   sensor_update(client, "az", String(1000 * az));
@@ -304,7 +319,9 @@ void loop() {
   int16_t gyroY = 0;
   int16_t gyroZ = 0;
 
+#if defined(ARDUINO_M5Stick_C)
   M5.IMU.getGyroAdc(&gyroX, &gyroY, &gyroZ);
+#endif
   sensor_update(client, "gx", String(gyroX));
   sensor_update(client, "gy", String(gyroY));
   sensor_update(client, "gz", String(gyroZ));
