@@ -369,7 +369,7 @@ void loop() {
   sensor_update(client, "ax", String(-1 * 240 * ax));
   sensor_update(client, "ay", String(-1 * 180 * ay));
   sensor_update(client, "az", String(1000 * az));
-  M5.Lcd.println("{ax,ay,az:(" + String(ax) + ", " + String(ay) + ", " + String(az) + ")}");
+  M5.Lcd.println("{accel:(" + String(ax) + ", " + String(ay) + ", " + String(az) + ")}");
 
   // sensor-update by gyro
   int16_t gyroX = 0;
@@ -389,7 +389,7 @@ void loop() {
   sensor_update(client, "gx", String(gyroX));
   sensor_update(client, "gy", String(gyroY));
   sensor_update(client, "gz", String(gyroZ));
-  M5.Lcd.println("{gx,gy,gz:(" + String(gyroX) + ", " + String(gyroY) + ", " + String(gyroZ) + ")}");
+  M5.Lcd.println("{gyro:(" + String(gyroX) + ", " + String(gyroY) + ", " + String(gyroZ) + ")}");
 
   client.stop();
 
