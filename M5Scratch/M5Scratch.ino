@@ -410,6 +410,15 @@ void loop() {
   M5.Lcd.println("{mag:(" + String(mx) + ", " + String(my) + ", " + String(mz) + ")}");
 #endif
 
+  float temp = 0;
+#if defined(ARDUINO_M5Stick_C)
+  M5.IMU.getTempData(&temp);
+#elif defined(ARDUINO_M5Stack_Core_ESP32)
+  temp = IMU.readTempData();
+#endif
+  M5.Lcd.println("{temp:" + String(temp) + "}");
+  sensor_update(client, "temp", String(temp));
+
   client.stop();
 
 }
