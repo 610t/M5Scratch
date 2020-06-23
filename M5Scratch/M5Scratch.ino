@@ -89,11 +89,17 @@ void setup() {
   delay(10);
 
   // We start by connecting to a WiFi network
+#if defined(ARDUINO_M5Stick_C)
+  M5.Lcd.setTextSize(1);
+#elif defined(ARDUINO_M5Stack_Core_ESP32)
+  M5.Lcd.setTextSize(2);
+#endif
   M5.Lcd.println("Welcome to Scratch Remoto Sensor!!");
   Serial.print("Connecting to ");
   Serial.println(ssid);
 
   WiFiSetup();
+
 
   M5.Lcd.println("WiFi connected.");
 
