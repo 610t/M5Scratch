@@ -39,6 +39,13 @@
 
 #if defined(ARDUINO_M5Stick_C)
 #include <M5StickC.h>
+#elif defined(ARDUINO_M5Stack_Core_ESP32)
+#include <M5Stack.h>
+#include "utility/MPU9250.h"
+#include "utility/quaternionFilters.h"
+
+#define FACES_KEYBOARD_I2C_ADDR 0x08
+MPU9250 IMU;
 #endif
 
 /*
@@ -100,6 +107,14 @@ void setup() {
   // Accel
 #if defined(ARDUINO_M5Stick_C)
   M5.IMU.Init();
+#elif defined(ARDUINO_M5Stack_Core_ESP32)
+  byte c = IMU.readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250);
+  IMU.MPU9250SelfTest(IMU.SelfTest);
+  IMU.calibrateMPU9250(IMU.gyroBias, IMU.accelBias);
+
+  IMU.initMPU9250();
+  byte d = IMU.readByte(AK8963_ADDRESS, WHO_AM_I_AK8963);
+  IMU.initAK8963(IMU.magCalibration);
 #endif
 
   // LED
@@ -296,6 +311,30 @@ void loop() {
   if (digitalRead(M5_BUTTON_RST) == LOW) {
     broadcast(client, "BtnB");
   }
+#elif defined(ARDUINO_M5Stack_Core_ESP32)
+  if (M5.BtnA.isPressed()) {
+    broadcast(client, "BtnA1");
+  }
+  if (M5.BtnB.isPressed()) {
+    broadcast(client, "BtnB1");
+  }
+  if (M5.BtnC.isPressed()) {
+    broadcast(client, "BtnC1");
+  }
+#endif
+
+#if defined(ARDUINO_M5Stack_Core_ESP32)
+  // keyboard input
+  if (digitalRead(5) == LOW)
+  {
+    Wire.requestFrom(FACES_KEYBOARD_I2C_ADDR, 1);
+    while (Wire.available())
+    {
+      char c = Wire.read(); // receive a byte as character
+      Serial.print(c);         // print the character
+      broadcast(client, "Key_" + String(c));
+    }
+  }
 #endif
 
   // sensor-update
@@ -308,6 +347,18 @@ void loop() {
 
 #if defined(ARDUINO_M5Stick_C)
   M5.IMU.getAccelData(&ax, &ay, &az);
+#elif defined(ARDUINO_M5Stack_Core_ESP32)
+  if (IMU.readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01)
+  {
+    IMU.readAccelData(IMU.accelCount);  // Read the x/y/z adc values
+    IMU.getAres();
+
+    // Now we'll calculate the accleration value into actual g's
+    // This depends on scale being set
+    ax = (float)IMU.accelCount[0] * IMU.aRes; // - accelBias[0];
+    ay = (float)IMU.accelCount[1] * IMU.aRes; // - accelBias[1];
+    az = (float)IMU.accelCount[2] * IMU.aRes; // - accelBias[2];
+  }
 #endif
   sensor_update(client, "ax", String(-1 * 240 * ax));
   sensor_update(client, "ay", String(-1 * 180 * ay));
@@ -321,6 +372,13 @@ void loop() {
 
 #if defined(ARDUINO_M5Stick_C)
   M5.IMU.getGyroAdc(&gyroX, &gyroY, &gyroZ);
+#elif defined(ARDUINO_M5Stack_Core_ESP32)
+  IMU.readGyroData(IMU.gyroCount);
+  IMU.getGres();
+
+  gyroX = (float)IMU.gyroCount[0] * IMU.gRes;
+  gyroY = (float)IMU.gyroCount[1] * IMU.gRes;
+  gyroZ = (float)IMU.gyroCount[2] * IMU.gRes;
 #endif
   sensor_update(client, "gx", String(gyroX));
   sensor_update(client, "gy", String(gyroY));
