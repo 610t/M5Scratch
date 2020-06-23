@@ -414,7 +414,8 @@ void loop() {
 #if defined(ARDUINO_M5Stick_C)
   M5.IMU.getTempData(&temp);
 #elif defined(ARDUINO_M5Stack_Core_ESP32)
-  temp = IMU.readTempData();
+  IMU.tempCount = IMU.readTempData();
+  temp = ((float) IMU.tempCount) / 333.87 + 21.0;
 #endif
   M5.Lcd.println("{temp:" + String(temp) + "}");
   sensor_update(client, "temp", String(temp));
