@@ -133,7 +133,7 @@ void setup() {
 
 String getValue(char name, String msg) {
   msg.replace(String(name) + " ", "");
-  Serial.println("{" + String(name) + ":" + String(msg) + "}");
+  Serial.println("str:\"" + String(name) + ":" + String(msg) + "\"");
   return msg;
 }
 
@@ -243,14 +243,14 @@ void loop() {
       // message
       msg.replace("broadcast ", "");
       msg.replace("\"", "");
-      Serial.println("{broadcast:" + msg + "}");
-      M5.Lcd.println("{broadcast:" + msg + "}");
+      Serial.println("broadcast:\"" + msg + "\"");
+      M5.Lcd.println("broadcast:\"" + msg + "\"");
     } else if (msg.startsWith("sensor-update")) {
       // value
       msg.replace("sensor-update ", "");
       msg.replace("\"", "");
       msg.trim();
-      //M5.Lcd.println("{sensor-update " + msg + "}");
+      //M5.Lcd.println("sensor-update\"" + msg + "\"");
 
       while (msg.length() > 0) {
         msg.trim();
@@ -274,25 +274,25 @@ void loop() {
 #endif
             break;
         }
-        //Serial.println("{{msg:" + msg + "}}");
+        //Serial.println("msg:\"" + msg + "\"");
 
         // Skip var_value
         while (msg.charAt(0) != ' ' && msg.length() > 0) {
           msg = msg.substring(1);
         }
-        //Serial.println("{{msg2:" + msg + "}}");
+        //Serial.println("msg2:\"" + msg + "\"");
       }
 
       //// Output
       // RGB background
       M5.Lcd.fillScreen(uint16_t (((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3) ));
 
-      M5.Lcd.println("{RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")}");
-      Serial.println("{RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")}");
+      M5.Lcd.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
+      Serial.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
       // msg
       //M5.Lcd.setCursor(0, 100);
       //M5.Lcd.setTextSize(5);
-      M5.Lcd.println("{s:" + s + "}");
+      M5.Lcd.println("s:\"" + s + "\"");
     } else {
       Serial.println("NOP");
     }
@@ -349,7 +349,7 @@ void loop() {
   sensor_update(client, "ax", String(-1 * 240 * ax));
   sensor_update(client, "ay", String(-1 * 180 * ay));
   sensor_update(client, "az", String(1000 * az));
-  M5.Lcd.println("{accel:(" + String(ax) + ", " + String(ay) + ", " + String(az) + ")}");
+  M5.Lcd.println("accel:(" + String(ax) + ", " + String(ay) + ", " + String(az) + ")");
 
   // sensor-update by gyro
   int16_t gyroX = 0;
@@ -361,7 +361,7 @@ void loop() {
   sensor_update(client, "gx", String(gyroX));
   sensor_update(client, "gy", String(gyroY));
   sensor_update(client, "gz", String(gyroZ));
-  M5.Lcd.println("{gyro:(" + String(gyroX) + ", " + String(gyroY) + ", " + String(gyroZ) + ")}");
+  M5.Lcd.println("gyro:(" + String(gyroX) + ", " + String(gyroY) + ", " + String(gyroZ) + ")");
 
 #if defined(ARDUINO_M5Stack_Core_ESP32)
   // sensor-update by magnetic value
@@ -374,13 +374,13 @@ void loop() {
   sensor_update(client, "pitch", String(pitch));
   sensor_update(client, "roll", String(roll));
   sensor_update(client, "yaw", String(yaw));
-  M5.Lcd.println("{mag:(" + String(pitch) + ", " + String(roll) + ", " + String(yaw) + ")}");
+  M5.Lcd.println("mag:(" + String(pitch) + ", " + String(roll) + ", " + String(yaw) + ")");
 #endif
 
   float temp = 0;
-  
+
   M5.IMU.getTempData(&temp);
-  M5.Lcd.println("{temp:" + String(temp) + "}");
+  M5.Lcd.println("temp:" + String(temp));
   sensor_update(client, "temp", String(temp));
 
   client.stop();
