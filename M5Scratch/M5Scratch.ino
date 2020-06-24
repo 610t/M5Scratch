@@ -346,8 +346,14 @@ void loop() {
 
   M5.IMU.getAccelData(&ax, &ay, &az);
 
+#if defined(ARDUINO_M5Stick_C)
+  // Rotation is different from landscape.
+  sensor_update(client, "ax", String(-1 * 240 * ay));
+  sensor_update(client, "ay", String(+1 * 180 * ax));
+#elif defined(ARDUINO_M5Stack_Core_ESP32)
   sensor_update(client, "ax", String(-1 * 240 * ax));
   sensor_update(client, "ay", String(-1 * 180 * ay));
+#endif
   sensor_update(client, "az", String(1000 * az));
   M5.Lcd.println("accel:(" + String(ax) + ", " + String(ay) + ", " + String(az) + ")");
 
