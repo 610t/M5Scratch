@@ -90,6 +90,7 @@ void setup() {
 
   // We start by connecting to a WiFi network
 #if defined(ARDUINO_M5Stick_C)
+  M5.Lcd.setRotation(3);
   M5.Lcd.setTextSize(1);
 #elif defined(ARDUINO_M5Stack_Core_ESP32)
   M5.Lcd.setTextSize(2);
