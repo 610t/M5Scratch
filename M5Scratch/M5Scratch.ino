@@ -420,6 +420,10 @@ void loop() {
   M5.Lcd.println("{temp:" + String(temp) + "}");
   sensor_update(client, "temp", String(temp));
 
+#if defined(ARDUINO_M5Stack_Core_ESP32)
+  IMU.updateTime();
+#endif
+
   client.stop();
 
 }
