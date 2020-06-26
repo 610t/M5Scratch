@@ -179,6 +179,7 @@ void sensor_update(WiFiClient client, String varName, String varValue) {
   cmd.toCharArray(buf, cmd.length() + 1);
   sprintf(scmd + 4, buf);
   scmd[3] = (uint8_t)strlen(scmd + 4);
+  delay(10);
   client.setTimeout(100);
   if (client.write((const uint8_t*)scmd, 4 + strlen(scmd + 4))) {
     //Serial.println("sensor-update ok");
