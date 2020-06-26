@@ -47,6 +47,11 @@
 
 #include <M5Stack.h>
 
+#if defined(M5STACK_MPU9250)
+#include "utility/MPU9250.h"
+MPU9250 IMU;
+#endif
+
 #define FACES_KEYBOARD_I2C_ADDR 0x08
 #endif
 
@@ -114,7 +119,17 @@ void setup() {
   digitalWrite(5, HIGH);
 
   // Accel & gyro (& mag for M5Stack)
+#if !defined(M5STACK_MPU9250)
   M5.IMU.Init();
+#else
+  IMU.MPU9250SelfTest(IMU.SelfTest);
+
+  IMU.calibrateMPU9250(IMU.gyroBias, IMU.accelBias);
+  IMU.initMPU9250();
+
+  delay(500);
+  IMU.initAK8963(IMU.magCalibration);
+#endif
 
   // LED
 #if defined(ARDUINO_M5Stick_C)
@@ -344,7 +359,21 @@ void loop() {
   float ay = 0;
   float az = 0;
 
+#if !defined(M5STACK_MPU9250)
   M5.IMU.getAccelData(&ax, &ay, &az);
+#else
+  if (IMU.readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01)
+  {
+    IMU.readAccelData(IMU.accelCount);  // Read the x/y/z adc values
+    IMU.getAres();
+
+    // Now we'll calculate the accleration value into actual g's
+    // This depends on scale being set
+    ax = (float)IMU.accelCount[0] * IMU.aRes; // - accelBias[0];
+    ay = (float)IMU.accelCount[1] * IMU.aRes; // - accelBias[1];
+    az = (float)IMU.accelCount[2] * IMU.aRes; // - accelBias[2];
+  }
+#endif
 
 #if defined(ARDUINO_M5Stick_C)
   // Rotation is different from landscape.
@@ -362,32 +391,55 @@ void loop() {
   int16_t gyroY = 0;
   int16_t gyroZ = 0;
 
+#if !defined(M5STACK_MPU9250)
   M5.IMU.getGyroAdc(&gyroX, &gyroY, &gyroZ);
+#else
+  IMU.readGyroData(IMU.gyroCount);
+  IMU.getGres();
+
+  gyroX = (float)IMU.gyroCount[0] * IMU.gRes;
+  gyroY = (float)IMU.gyroCount[1] * IMU.gRes;
+  gyroZ = (float)IMU.gyroCount[2] * IMU.gRes;
+#endif
 
   sensor_update(client, "gx", String(gyroX));
   sensor_update(client, "gy", String(gyroY));
   sensor_update(client, "gz", String(gyroZ));
   M5.Lcd.println("gyro:(" + String(gyroX) + ", " + String(gyroY) + ", " + String(gyroZ) + ")");
 
-#if defined(ARDUINO_M5Stack_Core_ESP32)
+#if defined(M5STACK_MPU9250)
   // sensor-update by magnetic value
-  float pitch = 0;
-  float roll = 0;
-  float yaw = 0;
+  float mx = 0;
+  float my = 0;
+  float mz = 0;
 
-  M5.IMU.getAhrsData(&pitch, &roll, &yaw);
+  IMU.readMagData(IMU.magCount);
+  IMU.getMres();
 
-  sensor_update(client, "pitch", String(pitch));
-  sensor_update(client, "roll", String(roll));
-  sensor_update(client, "yaw", String(yaw));
-  M5.Lcd.println("mag:(" + String(pitch) + ", " + String(roll) + ", " + String(yaw) + ")");
+  mx = (float)IMU.magCount[0] * IMU.mRes * IMU.magCalibration[0] - 470;
+  my = (float)IMU.magCount[1] * IMU.mRes * IMU.magCalibration[1] - 120;
+  mz = (float)IMU.magCount[2] * IMU.mRes * IMU.magCalibration[2] - 125;
+
+  sensor_update(client, "mx", String(mx));
+  sensor_update(client, "my", String(my));
+  sensor_update(client, "mz", String(mz));
+  M5.Lcd.println("mag:(" + String(mx) + ", " + String(my) + ", " + String(mz) + ")");
 #endif
 
   float temp = 0;
 
+#if !defined(M5STACK_MPU9250)
   M5.IMU.getTempData(&temp);
+#else
+  IMU.tempCount = IMU.readTempData();
+  temp = ((float) IMU.tempCount) / 333.87 + 21.0;
+#endif
   M5.Lcd.println("temp:" + String(temp));
   sensor_update(client, "temp", String(temp));
+
+#if defined(M5STACK_MPU9250)
+  IMU.updateTime();
+#endif
 
   client.stop();
 
