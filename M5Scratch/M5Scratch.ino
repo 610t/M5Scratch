@@ -392,7 +392,6 @@ void loop() {
     gyroY = (float)IMU.gyroCount[1] * IMU.gRes;
     gyroZ = (float)IMU.gyroCount[2] * IMU.gRes;
 
-#if defined(M5STACK_MPU9250)
     // get magnetic
     IMU.readMagData(IMU.magCount);
     IMU.getMres();
@@ -406,7 +405,6 @@ void loop() {
     temp = ((float) IMU.tempCount) / 333.87 + 21.0;
 
     IMU.updateTime();
-#endif
   }
 #endif
 
