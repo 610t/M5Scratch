@@ -55,6 +55,8 @@ MPU9250 IMU;
 #define FACES_KEYBOARD_I2C_ADDR 0x08
 #endif
 
+#include "utility/MahonyAHRS.h"
+
 /*
   network.h contains network information below:
 
@@ -369,6 +371,10 @@ void loop() {
   float my = 0;
   float mz = 0;
 
+  float pitch = 0;
+  float roll = 0;
+  float yaw = 0;
+
   float temp = 0;
 
 #if !defined(M5STACK_MPU9250)
@@ -409,6 +415,9 @@ void loop() {
   }
 #endif
 
+  // Calculate pitch, roll, yaw
+  MahonyAHRSupdateIMU(gyroX, gyroY, gyroZ, ax, ay, az, &pitch, &roll, &yaw);
+
   // send sensor-update
 
   // sensor-update accel
@@ -436,6 +445,13 @@ void loop() {
   sensor_update(client, "mz", String(mz));
   M5.Lcd.println("mag:(" + String(mx) + ", " + String(my) + ", " + String(mz) + ")");
 #endif
+
+  // sensor-update pitch, roll, yaw
+  delay(100);
+  sensor_update(client, "pitch", String(pitch));
+  sensor_update(client, "roll", String(roll));
+  sensor_update(client, "yaw", String(yaw));
+  M5.Lcd.println("p,r,y:(" + String(pitch) + ", " + String(roll) + ", " + String(yaw) + ")");
 
   // sensor-update temp
   M5.Lcd.println("temp:" + String(temp));
