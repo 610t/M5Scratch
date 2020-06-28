@@ -198,6 +198,9 @@ void loop() {
   String s;
   char* str;
 
+  M5.update();
+  delay(10);
+
   // Reconnect to WiFi
   while (!(WiFi.status() == WL_CONNECTED)) {
     Serial.println("WiFi not connected");
@@ -320,6 +323,7 @@ void loop() {
 
   // broadcast
   broadcast(client, "test");
+
   // broadcast by button
 #if defined(ARDUINO_M5Stick_C)
   if (digitalRead(M5_BUTTON_HOME) == LOW) {
@@ -330,13 +334,13 @@ void loop() {
   }
 #elif defined(ARDUINO_M5Stack_Core_ESP32)
   if (M5.BtnA.isPressed()) {
-    broadcast(client, "BtnA1");
+    broadcast(client, "BtnA");
   }
   if (M5.BtnB.isPressed()) {
-    broadcast(client, "BtnB1");
+    broadcast(client, "BtnB");
   }
   if (M5.BtnC.isPressed()) {
-    broadcast(client, "BtnC1");
+    broadcast(client, "BtnC");
   }
 #endif
 
