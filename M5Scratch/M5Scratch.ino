@@ -375,6 +375,8 @@ void loop() {
   float roll = 0;
   float yaw = 0;
 
+  float heading = 0;
+
   float temp = 0;
 
 #if !defined(M5STACK_MPU9250)
@@ -406,6 +408,11 @@ void loop() {
     mx = (float)IMU.magCount[0] * IMU.mRes * IMU.magCalibration[0] - 470;
     my = (float)IMU.magCount[1] * IMU.mRes * IMU.magCalibration[1] - 120;
     mz = (float)IMU.magCount[2] * IMU.mRes * IMU.magCalibration[2] - 125;
+
+    // get heading
+    float offset_mx = 1944.21;
+    float offset_my = 1204.83;
+    heading = atan2(my - offset_my, mx - offset_mx) * 180.0 / M_PI;
 
     // get temp
     IMU.tempCount = IMU.readTempData();
@@ -444,6 +451,10 @@ void loop() {
   sensor_update(client, "my", String(my));
   sensor_update(client, "mz", String(mz));
   M5.Lcd.println("mag:(" + String(mx) + ", " + String(my) + ", " + String(mz) + ")");
+
+  // sensor-update heading
+  sensor_update(client, "heading", String(heading));
+  M5.Lcd.println("heading:" + String(heading));
 #endif
 
   // sensor-update pitch, roll, yaw
