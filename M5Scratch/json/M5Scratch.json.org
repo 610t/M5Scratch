@@ -1,0 +1,7 @@
+{
+"width":120, 
+"height":120, 
+"authorName":"Takeshi MUTOH", 
+"projectURL":"https://github.com/610t/", 
+"credits":"https://github.com/610t"
+}
