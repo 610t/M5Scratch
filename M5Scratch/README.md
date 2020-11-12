@@ -23,6 +23,4 @@ I will write detail later.
 
 # TODO
 - Better Scratch Host IP setting method
-- New device support
--- M5StickC Plus
--- ATOM Matrix
+- New device support: M5StickC Plus, ATOM Matrix, Core 2
