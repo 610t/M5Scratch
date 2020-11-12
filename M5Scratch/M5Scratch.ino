@@ -46,6 +46,7 @@
 // #define M5STACK_200Q
 
 #include <M5Stack.h>
+#include <M5StackUpdater.h>
 
 #if defined(M5STACK_MPU9250)
 #include "utility/MPU9250.h"
@@ -60,8 +61,6 @@ MPU9250 IMU;
 /*
   network.h contains network information below:
 
-  const char* ssid     = "SSID";
-  const char* password = "PASSWORD";
   const char* host     = "Scratch Host IP";
 */
 #include "network.h"
@@ -73,7 +72,7 @@ void WiFiSetup() {
 wifisetup:
   Serial.println("Wifi begin.");
   WiFi.disconnect();
-  WiFi.begin(ssid, password);
+  WiFi.begin();
   Serial.println("End of Wifi begin.");
 
   int c = 0;
@@ -92,6 +91,15 @@ void setup() {
   // Init M5
   M5.begin();
   delay(100);
+
+#if defined(ARDUINO_M5Stack_Core_ESP32)
+  // for LovyanLauncher
+  if (digitalRead(BUTTON_A_PIN) == 0) {
+    Serial.println("Will Load menu binary");
+    updateFromFS(SD);
+    ESP.restart();
+  }
+#endif
 
   // Init Serial
   Serial.begin(115200);
