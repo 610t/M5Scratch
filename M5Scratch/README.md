@@ -20,3 +20,7 @@ Japanese information is at https://scrapbox.io/610t/M5Scratch .
 
 # How to add new variable and broadcast message
 I will write detail later.
+
+# TODO
+- Better Scratch Host IP setting method
+- New device support: M5StickC Plus, ATOM Matrix, Core 2, Wio Terminal
