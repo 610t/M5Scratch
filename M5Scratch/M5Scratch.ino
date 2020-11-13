@@ -53,6 +53,8 @@ MPU9250 IMU;
 #endif
 
 #define FACES_KEYBOARD_I2C_ADDR 0x08
+#elif defined(ARDUINO_M5STACK_Core2)
+#include <M5Core2.h>
 #endif
 
 #include "utility/MahonyAHRS.h"
@@ -67,7 +69,7 @@ MPU9250 IMU;
 #include "network.h"
 
 const int Port = 42001;
-//WiFiClient client;
+WiFiClient client;
 
 void WiFiSetup() {
 wifisetup:
@@ -154,7 +156,7 @@ String getValue(char name, String msg) {
   return msg;
 }
 
-void broadcast(WiFiClient client, String msg) {
+void broadcast(String msg) {
   char scmd[32] = {0};
   char buf[100] = {0};
   String cmd = "broadcast \"" + msg + "\"";
@@ -173,7 +175,7 @@ void broadcast(WiFiClient client, String msg) {
   }
 }
 
-void sensor_update(WiFiClient client, String varName, String varValue) {
+void sensor_update(String varName, String varValue) {
   char scmd[32] = {0};
   char buf[100] = {0};
   String cmd = "sensor-update \"" + varName + "\" " + varValue + " ";
@@ -206,9 +208,6 @@ void loop() {
     Serial.println("WiFi not connected");
     WiFiSetup();
   }
-
-  // Use WiFiClient class to create TCP connections
-  WiFiClient client;
 
   Serial.println("Before client connect");
   while (!client.connect(host, Port)) {
@@ -322,25 +321,25 @@ void loop() {
   }
 
   // broadcast
-  broadcast(client, "test");
+  broadcast("test");
 
   // broadcast by button
 #if defined(ARDUINO_M5Stick_C)
   if (digitalRead(M5_BUTTON_HOME) == LOW) {
-    broadcast(client, "BtnA");
+    broadcast("BtnA");
   }
   if (digitalRead(M5_BUTTON_RST) == LOW) {
-    broadcast(client, "BtnB");
+    broadcast("BtnB");
   }
 #elif defined(ARDUINO_M5Stack_Core_ESP32)
   if (M5.BtnA.isPressed()) {
-    broadcast(client, "BtnA");
+    broadcast("BtnA");
   }
   if (M5.BtnB.isPressed()) {
-    broadcast(client, "BtnB");
+    broadcast("BtnB");
   }
   if (M5.BtnC.isPressed()) {
-    broadcast(client, "BtnC");
+    broadcast("BtnC");
   }
 #endif
 
@@ -353,13 +352,13 @@ void loop() {
     {
       char c = Wire.read(); // receive a byte as character
       Serial.print(c);         // print the character
-      broadcast(client, "Key_" + String(c));
+      broadcast("Key_" + String(c));
     }
   }
 #endif
 
   // sensor-update
-  sensor_update(client, "v", String(random(0, 255)));
+  sensor_update("v", String(random(0, 255)));
 
 
   // define all sensor valiable.
@@ -434,43 +433,43 @@ void loop() {
   // sensor-update accel
 #if defined(ARDUINO_M5Stick_C)
   // Rotation is different from landscape.
-  sensor_update(client, "ax", String(-1 * 240 * ay));
-  sensor_update(client, "ay", String(+1 * 180 * ax));
+  sensor_update("ax", String(-1 * 240 * ay));
+  sensor_update("ay", String(+1 * 180 * ax));
 #elif defined(ARDUINO_M5Stack_Core_ESP32)
-  sensor_update(client, "ax", String(-1 * 240 * ax));
-  sensor_update(client, "ay", String(-1 * 180 * ay));
+  sensor_update("ax", String(-1 * 240 * ax));
+  sensor_update("ay", String(-1 * 180 * ay));
 #endif
-  sensor_update(client, "az", String(1000 * az));
+  sensor_update("az", String(1000 * az));
   M5.Lcd.println("accel:(" + String(ax) + ", " + String(ay) + ", " + String(az) + ")");
 
   // sensor-update gyro
-  sensor_update(client, "gx", String(gyroX));
-  sensor_update(client, "gy", String(gyroY));
-  sensor_update(client, "gz", String(gyroZ));
+  sensor_update("gx", String(gyroX));
+  sensor_update("gy", String(gyroY));
+  sensor_update("gz", String(gyroZ));
   M5.Lcd.println("gyro:(" + String(gyroX) + ", " + String(gyroY) + ", " + String(gyroZ) + ")");
 
 #if defined(M5STACK_MPU9250)
   // sensor-update magnetic
-  sensor_update(client, "mx", String(mx));
-  sensor_update(client, "my", String(my));
-  sensor_update(client, "mz", String(mz));
+  sensor_update("mx", String(mx));
+  sensor_update("my", String(my));
+  sensor_update("mz", String(mz));
   M5.Lcd.println("mag:(" + String(mx) + ", " + String(my) + ", " + String(mz) + ")");
 
   // sensor-update heading
-  sensor_update(client, "heading", String(heading));
+  sensor_update("heading", String(heading));
   M5.Lcd.println("heading:" + String(heading));
 #endif
 
   // sensor-update pitch, roll, yaw
   delay(100);
-  sensor_update(client, "pitch", String(pitch));
-  sensor_update(client, "roll", String(roll));
-  sensor_update(client, "yaw", String(yaw));
+  sensor_update("pitch", String(pitch));
+  sensor_update("roll", String(roll));
+  sensor_update("yaw", String(yaw));
   M5.Lcd.println("p,r,y:(" + String(pitch) + ", " + String(roll) + ", " + String(yaw) + ")");
 
   // sensor-update temp
   M5.Lcd.println("temp:" + String(temp));
-  sensor_update(client, "temp", String(temp));
+  sensor_update("temp", String(temp));
 
   client.stop();
 
