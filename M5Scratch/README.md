@@ -21,7 +21,7 @@ Japanese information is at https://scrapbox.io/610t/M5Scratch .
 ## Setting at Scratch
 - Mouse right click "[Slider] sensor value" and check "enable remote sensor connections".
 
-![enable remote sensor](https://gyazo.com/136691fcf44d005ef3e24d544bf30acc/raw)
+![enable remote sensor](https://gyazo.com/92b159d8b26f698c4ed261e7243800c8/raw)
 
 - Try code below:
 
