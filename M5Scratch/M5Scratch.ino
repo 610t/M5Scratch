@@ -37,6 +37,8 @@
 /*
   network.h contains network information below:
 
+  const char* ssid     = "SSID";
+  const char* password = "PASSWORD";
   const char* host     = "Scratch Host IP";
 */
 #include "network.h"
@@ -109,21 +111,6 @@ void setup() {
   M5.Lcd.println("Welcome to Scratch Remoto Sensor!!");
 #endif
 
-  // Connecting to a WiFi network with SmartConfig.
-  WiFi.mode(WIFI_AP_STA);
-  WiFi.beginSmartConfig();
-
-  Serial.println("Waiting for SmartConfig.");
-  while (!WiFi.smartConfigDone()) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
 #if defined(ARDUINO_M5Stack_ATOM)
   setBuff(0x20, 0x20, 0x20);
   M5.dis.displaybuff(DisBuff);
@@ -133,6 +120,17 @@ void setup() {
 #else
   M5.Lcd.println("WiFi connected.");
 #endif
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+#if !defined(ARDUINO_M5Stack_ATOM)
+    M5.Lcd.print(".");
+#endif
+    Serial.print(".");
+  }
 
   Serial.println("Wifi OK");
 
