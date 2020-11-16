@@ -87,29 +87,6 @@ void setBuff(uint8_t Rdata, uint8_t Gdata, uint8_t Bdata)
 const int Port = 42001;
 WiFiClient client;
 
-void WiFiSetup() {
-wifisetup:
-  Serial.println("Wifi begin.");
-  WiFi.disconnect();
-  WiFi.begin(ssid, password);
-  Serial.println("End of Wifi begin.");
-
-  int c = 0;
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-#if !defined(ARDUINO_M5Stack_ATOM)
-    M5.Lcd.print(".");
-#endif
-    Serial.print(".");
-    if (c > 10) goto wifisetup;
-    c += 1;
-  }
-#if !defined(ARDUINO_M5Stack_ATOM)
-  M5.Lcd.println("");
-#endif
-  Serial.println("End of WiFiSetup()");
-}
-
 void setup() {
   // Init M5
 #if defined(ARDUINO_M5Stack_ATOM)
@@ -123,7 +100,6 @@ void setup() {
   Serial.begin(115200);
   delay(10);
 
-  // We start by connecting to a WiFi network
 #if !defined(ARDUINO_M5Stack_ATOM)
 #if defined(ARDUINO_M5Stick_C)
   M5.Lcd.setRotation(3);
@@ -133,10 +109,6 @@ void setup() {
 #endif
   M5.Lcd.println("Welcome to Scratch Remoto Sensor!!");
 #endif
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-
-  WiFiSetup();
 
 #if defined(ARDUINO_M5Stack_ATOM)
   setBuff(0x20, 0x20, 0x20);
@@ -147,7 +119,17 @@ void setup() {
 #else
   M5.Lcd.println("WiFi connected.");
 #endif
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
 
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+#if !defined(ARDUINO_M5Stack_ATOM)
+    M5.Lcd.print(".");
+#endif
+    Serial.print(".");
+  }
   Serial.println("Wifi OK");
 
   // Wire setup
@@ -236,12 +218,6 @@ void loop() {
   M5.update();
   delay(10);
 
-  // Reconnect to WiFi
-  while (!(WiFi.status() == WL_CONNECTED)) {
-    Serial.println("WiFi not connected");
-    WiFiSetup();
-  }
-
   Serial.println("Before client connect");
   while (!client.connect(host, Port)) {
     Serial.println("connection failed");
@@ -249,8 +225,6 @@ void loop() {
   Serial.println("create tcp ok");
 
   while (!client.connected()) {
-    Serial.println("client not connected retry WiFiSetup");
-    WiFiSetup();
     Serial.println("Stop connection");
     client.stop();
     Serial.println("Before client.connect");
