@@ -138,7 +138,13 @@ void setup() {
 
   WiFiSetup();
 
-#if !defined(ARDUINO_M5Stack_ATOM)
+#if defined(ARDUINO_M5Stack_ATOM)
+  setBuff(0x20, 0x20, 0x20);
+  M5.dis.displaybuff(DisBuff);
+
+  // for ATOM Lite
+  // M5.dis.drawpix(0, 0xffffff);
+#else
   M5.Lcd.println("WiFi connected.");
 #endif
 
@@ -337,6 +343,7 @@ void loop() {
       //// Output
       // RGB background
 #if defined(ARDUINO_M5Stack_ATOM)
+      // for ATOM Matrix
       // Conver raw rgb(0-255) to led rgb(0-0x20)
       int rl = constrain(int((r / 255.0) * 0x20), 0, 0x20);
       int gl = constrain(int((g / 255.0) * 0x20), 0, 0x20);
@@ -345,6 +352,13 @@ void loop() {
 
       setBuff(rl, gl, bl);
       M5.dis.displaybuff(DisBuff);
+
+      // for ATOM Lite
+      // Conver raw rgb(0-255) to led rgb(0-0xf)
+      //rl = constrain(int((r / 255.0) * 0xf), 0, 0xf);
+      //gl = constrain(int((g / 255.0) * 0xf), 0, 0xf);
+      //bl = constrain(int((b / 255.0) * 0xf), 0, 0xf);
+      //M5.dis.drawpix(0, (((gl & 0xf) << 12) | ((rl & 0xf) << 8) | ((bl & 0xf) << 4)));
 #else
       M5.Lcd.fillScreen(uint16_t (((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3) ));
 
