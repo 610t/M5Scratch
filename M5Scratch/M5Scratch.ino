@@ -34,6 +34,11 @@
    This program is demonstration that Scrath Remote Sensor Protocol with M5Stack.
 */
 
+// Network related const.
+char* host     = "192.168.3.3"; // Default IP Address without SD /M5Scratch.txt.
+#define HOST_IP_FILE  "/M5Scratch.txt"
+const int Port = 42001; // Scrate Remote Sensor use TCP/IP 42001.
+
 #include <WiFi.h>
 #include <Wire.h>
 
@@ -58,14 +63,7 @@ MPU9250 IMU;
 
 #include "utility/MahonyAHRS.h"
 
-/*
-  network.h contains network information below:
-
-  const char* host     = "Scratch Host IP";
-*/
-#include "network.h"
-
-const int Port = 42001;
+String r = "";
 WiFiClient client;
 
 void setup() {
@@ -95,9 +93,9 @@ void setup() {
 
   // WiFi
 #if !defined(ARDUINO_M5Stack_ATOM)
-  M5.Lcd.println("Welcome to Scratch Remoto Sensor!!");
+  M5.Lcd.println("Welcome to Scratch Remote Sensor!!");
 #endif
-  Serial.println("Welcome to Scratch Remoto Sensor!!");
+  Serial.println("Welcome to Scratch Remote Sensor!!");
 
   WiFi.begin();
   while (WiFi.status() != WL_CONNECTED) {
@@ -139,6 +137,24 @@ void setup() {
   pinMode(M5_BUTTON_RST, INPUT);
 #endif
 
+  // Setting Scratch Host IP from SD
+  File f = SD.open(HOST_IP_FILE);
+  if (f) {
+    host = "";
+    Serial.println("File open successfully.");
+    while (f.available()) {
+      char chr = f.read();
+      r = r + chr;
+    }
+    f.close();
+  } else {
+    Serial.println("File open error "HOST_IP_FILE);
+  }
+  r.trim();
+  if (r.length() != 0) {
+    host = const_cast<char*>(r.c_str());
+  }
+  Serial.println("Scratch Host IP is {" + String(host) + "}");
   delay(1000);
 }
 
@@ -198,6 +214,7 @@ void loop() {
 
   Serial.println("Before client connect");
   while (!client.connect(host, Port)) {
+    Serial.println("Scratch Host IP is {" + String(host) + "}");
     Serial.println("connection failed");
   }
   Serial.println("create tcp ok");
