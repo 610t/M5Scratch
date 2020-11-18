@@ -137,11 +137,11 @@ void setup() {
   pinMode(M5_BUTTON_RST, INPUT);
 #endif
 
-  // Setting Scratch Host IP from SD
+  // Scratch Host IP setting use /M5Scratch.txt at SD.
   File f = SD.open(HOST_IP_FILE);
   if (f) {
     host = "";
-    Serial.println("File open successfully.");
+    Serial.println("File "HOST_IP_FILE" open successfully.");
     while (f.available()) {
       char chr = f.read();
       r = r + chr;
