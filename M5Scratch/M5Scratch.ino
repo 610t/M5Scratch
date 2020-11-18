@@ -66,26 +66,7 @@ MPU9250 IMU;
 #include "network.h"
 
 const int Port = 42001;
-//WiFiClient client;
-
-void WiFiSetup() {
-wifisetup:
-  Serial.println("Wifi begin.");
-  WiFi.disconnect();
-  WiFi.begin();
-  Serial.println("End of Wifi begin.");
-
-  int c = 0;
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    M5.Lcd.print(".");
-    Serial.print(".");
-    if (c > 10) goto wifisetup;
-    c += 1;
-  }
-  M5.Lcd.println("");
-  Serial.println("End of WiFiSetup()");
-}
+WiFiClient client;
 
 void setup() {
   // Init M5
@@ -105,22 +86,27 @@ void setup() {
   Serial.begin(115200);
   delay(10);
 
-  // We start by connecting to a WiFi network
 #if defined(ARDUINO_M5Stick_C)
   M5.Lcd.setRotation(3);
   M5.Lcd.setTextSize(1);
 #elif defined(ARDUINO_M5Stack_Core_ESP32)
   M5.Lcd.setTextSize(2);
 #endif
+
+  // WiFi
+#if !defined(ARDUINO_M5Stack_ATOM)
   M5.Lcd.println("Welcome to Scratch Remoto Sensor!!");
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
+#endif
+  Serial.println("Welcome to Scratch Remoto Sensor!!");
 
-  WiFiSetup();
-
-
-  M5.Lcd.println("WiFi connected.");
-
+  WiFi.begin();
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+#if !defined(ARDUINO_M5Stack_ATOM)
+    M5.Lcd.print(".");
+#endif
+    Serial.print(".");
+  }
   Serial.println("Wifi OK");
 
   // Wire setup
@@ -209,14 +195,6 @@ void loop() {
   M5.update();
   delay(10);
 
-  // Reconnect to WiFi
-  while (!(WiFi.status() == WL_CONNECTED)) {
-    Serial.println("WiFi not connected");
-    WiFiSetup();
-  }
-
-  // Use WiFiClient class to create TCP connections
-  WiFiClient client;
 
   Serial.println("Before client connect");
   while (!client.connect(host, Port)) {
@@ -225,8 +203,6 @@ void loop() {
   Serial.println("create tcp ok");
 
   while (!client.connected()) {
-    Serial.println("client not connected retry WiFiSetup");
-    WiFiSetup();
     Serial.println("Stop connection");
     client.stop();
     Serial.println("Before client.connect");
