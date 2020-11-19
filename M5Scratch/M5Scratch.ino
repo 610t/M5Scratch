@@ -112,6 +112,7 @@ void setup() {
   Serial.begin(115200);
   delay(10);
 
+#if !defined(ARDUINO_M5Stack_ATOM)
 #if defined(ARDUINO_M5Stick_C)
   M5.Lcd.setRotation(3);
   M5.Lcd.setTextSize(1);
@@ -174,6 +175,7 @@ void setup() {
   pinMode(M5_BUTTON_RST, INPUT);
 #endif
 
+#if defined(ARDUINO_M5Stack_Core_ESP3)
   // Scratch Host IP setting use /M5Scratch.txt at SD.
   File f = SD.open(HOST_IP_FILE);
   if (f) {
@@ -191,6 +193,7 @@ void setup() {
   if (r.length() != 0) {
     host = const_cast<char*>(r.c_str());
   }
+#endif
   Serial.println("Scratch Host IP is {" + String(host) + "}");
   delay(1000);
 }
