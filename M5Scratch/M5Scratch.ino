@@ -57,6 +57,7 @@ const int Port = 42001;
 // #define M5STACK_200Q
 
 #include <M5Stack.h>
+#include <M5StackUpdater.h>
 
 #if defined(M5STACK_MPU9250)
 #include "utility/MPU9250.h"
@@ -86,6 +87,7 @@ void setBuff(uint8_t Rdata, uint8_t Gdata, uint8_t Bdata)
 
 #include "utility/MahonyAHRS.h"
 
+String r = "";
 WiFiClient client;
 
 void setup() {
@@ -97,11 +99,19 @@ void setup() {
 #endif
   delay(100);
 
+#if defined(ARDUINO_M5Stack_Core_ESP32)
+  // for LovyanLauncher
+  if (digitalRead(BUTTON_A_PIN) == 0) {
+    Serial.println("Will Load menu binary");
+    updateFromFS(SD);
+    ESP.restart();
+  }
+#endif
+
   // Init Serial
   Serial.begin(115200);
   delay(10);
 
-#if !defined(ARDUINO_M5Stack_ATOM)
 #if defined(ARDUINO_M5Stick_C)
   M5.Lcd.setRotation(3);
   M5.Lcd.setTextSize(1);
@@ -164,6 +174,24 @@ void setup() {
   pinMode(M5_BUTTON_RST, INPUT);
 #endif
 
+  // Scratch Host IP setting use /M5Scratch.txt at SD.
+  File f = SD.open(HOST_IP_FILE);
+  if (f) {
+    host = "";
+    Serial.println("File "HOST_IP_FILE" open successfully.");
+    while (f.available()) {
+      char chr = f.read();
+      r = r + chr;
+    }
+    f.close();
+  } else {
+    Serial.println("File open error "HOST_IP_FILE);
+  }
+  r.trim();
+  if (r.length() != 0) {
+    host = const_cast<char*>(r.c_str());
+  }
+  Serial.println("Scratch Host IP is {" + String(host) + "}");
   delay(1000);
 }
 
@@ -222,6 +250,7 @@ void loop() {
 
   Serial.println("Before client connect");
   while (!client.connect(host, Port)) {
+    Serial.println("Scratch Host IP is {" + String(host) + "}");
     Serial.println("connection failed");
   }
   Serial.println("create tcp ok");
