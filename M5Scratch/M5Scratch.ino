@@ -313,6 +313,8 @@ void sensor_update(String varName, String varValue) {
 void loop() {
   uint8_t buffer[128] = {0};
   int r = 0, g = 0, b = 0, led = 0;
+  uint16_t rgb, old_rgb;
+  int circle_r = 40;
   String s;
   char* str;
 
@@ -435,11 +437,12 @@ void loop() {
         }
         //Serial.println("msg2:\"" + msg + "\"");
       }
-
+      rgb = uint16_t (((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3));
       //// Output
 #if defined(M5SCRATCH_DEMO)
       static uint8_t flip = 0;
 
+      // Moving Cat
       for (int_fast16_t yy = 0; yy < lcd_height; yy += sprite_height) {
         flip = flip ? 0 : 1;
         sprites[flip].clear();
@@ -452,6 +455,12 @@ void loop() {
         // icons.pushRotateZoom(&sprites[flip], x, y - yy, t, z, z, 0);
 
         if (yy == 0) {
+          // Circle with RGB color
+          sprites[flip].fillCircle(lcd_width - circle_r, circle_r, circle_r, rgb);
+          // RGB line
+          sprites[flip].drawGradientLine(0, 0, lcd_width, 0, old_rgb, rgb);
+
+          // Print out variables
           sprites[flip].setFont(&fonts::Font4);
           sprites[flip].setTextColor(0xFFFFFFU);
           sprites[flip].setCursor(0, 0);
@@ -496,9 +505,9 @@ void loop() {
       //M5.dis.drawpix(0, (((gl & 0xf) << 12) | ((rl & 0xf) << 8) | ((bl & 0xf) << 4)));
 #elif defined(M5SCRATCH_DEMO)
       // Very slow
-      // lcd.fillScreen(uint16_t (((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3) ));
+      // lcd.fillScreen(rgb);
 #else
-      M5.Lcd.fillScreen(uint16_t (((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3) ));
+      M5.Lcd.fillScreen(rgb);
       M5.Lcd.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
 #endif
       Serial.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
@@ -512,6 +521,7 @@ void loop() {
       Serial.println("NOP");
     }
 
+    old_rgb = rgb;
     len = msg.length();
   }
 
@@ -539,7 +549,7 @@ void loop() {
 #elif defined(ARDUINO_M5Stack_ATOM)
   if (M5.Btn.wasPressed())
   {
-    broadcast("Btn");
+    broadcast("BtnA");
   }
 #endif
 
