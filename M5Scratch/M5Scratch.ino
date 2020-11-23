@@ -176,16 +176,15 @@ void setup() {
 
   lcd.startWrite();
   lcd.setAddrWindow(0, 0, lcd_width, lcd_height);
-#else
+#endif
 #if !defined(ARDUINO_M5Stack_ATOM)
 #if defined(ARDUINO_M5Stick_C)
-  M5.Lcd.setRotation(3);
-  M5.Lcd.setTextSize(1);
+  lcd.setRotation(3);
+  lcd.setTextSize(1);
 #elif defined(ARDUINO_M5Stack_Core_ESP32)
-  M5.Lcd.setTextSize(2);
+  lcd.setTextSize(2);
 #endif
-  M5.Lcd.println("Welcome to Scratch Remoto Sensor!!");
-#endif
+  lcd.println("Welcome to Scratch Remoto Sensor!!");
 #endif
 
 #if !defined(M5SCRATCH_DEMO)
@@ -196,7 +195,7 @@ void setup() {
   // for ATOM Lite
   // M5.dis.drawpix(0, 0xffffff);
 #else
-  M5.Lcd.println("WiFi connected.");
+  lcd.println("WiFi connected.");
 #endif
 #endif
   Serial.print("Connecting to ");
@@ -206,7 +205,7 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
 #if !defined(ARDUINO_M5Stack_ATOM) && !defined(M5SCRATCH_DEMO)
-    M5.Lcd.print(".");
+    lcd.print(".");
 #endif
     Serial.print(".");
   }
@@ -357,7 +356,7 @@ void loop() {
 
   while (len > 0) {
 #if !defined(ARDUINO_M5Stack_ATOM) && !defined(M5SCRATCH_DEMO)
-    M5.Lcd.setCursor(0, 0);
+    lcd.setCursor(0, 0);
 #endif
     Serial.print("Received:[");
     // Skip 4 byte message header and get string.
@@ -377,14 +376,14 @@ void loop() {
       msg.replace("\"", "");
       Serial.println("broadcast:\"" + msg + "\"");
 #if !defined(ARDUINO_M5Stack_ATOM) && !defined(M5SCRATCH_DEMO)
-      M5.Lcd.println("broadcast:\"" + msg + "\"");
+      lcd.println("broadcast:\"" + msg + "\"");
 #endif
     } else if (msg.startsWith("sensor-update")) {
       // value
       msg.replace("sensor-update ", "");
       msg.replace("\"", "");
       msg.trim();
-      //M5.Lcd.println("sensor-update\"" + msg + "\"");
+      //lcd.println("sensor-update\"" + msg + "\"");
 
       while (msg.length() > 0) {
         msg.trim();
@@ -507,15 +506,15 @@ void loop() {
       // Very slow
       // lcd.fillScreen(rgb);
 #else
-      M5.Lcd.fillScreen(rgb);
-      M5.Lcd.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
+      lcd.fillScreen(rgb);
+      lcd.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
 #endif
       Serial.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
       // msg
-      //M5.Lcd.setCursor(0, 100);
-      //M5.Lcd.setTextSize(5);
+      //lcd.setCursor(0, 100);
+      //lcd.setTextSize(5);
 #if !defined(ARDUINO_M5Stack_ATOM) && !defined(M5SCRATCH_DEMO)
-      M5.Lcd.println("s:\"" + s + "\"");
+      lcd.println("s:\"" + s + "\"");
 #endif
     } else {
       Serial.println("NOP");
@@ -654,7 +653,7 @@ void loop() {
 #endif
   sensor_update("az", String(1000 * az));
 #if !defined(ARDUINO_M5Stack_ATOM) && !defined(M5SCRATCH_DEMO)
-  M5.Lcd.println("accel:(" + String(ax) + ", " + String(ay) + ", " + String(az) + ")");
+  lcd.println("accel:(" + String(ax) + ", " + String(ay) + ", " + String(az) + ")");
 #endif
 
   // sensor-update gyro
@@ -662,7 +661,7 @@ void loop() {
   sensor_update("gy", String(gyroY));
   sensor_update("gz", String(gyroZ));
 #if !defined(ARDUINO_M5Stack_ATOM) && !defined(M5SCRATCH_DEMO)
-  M5.Lcd.println("gyro:(" + String(gyroX) + ", " + String(gyroY) + ", " + String(gyroZ) + ")");
+  lcd.println("gyro:(" + String(gyroX) + ", " + String(gyroY) + ", " + String(gyroZ) + ")");
 #endif
 
 #if defined(M5STACK_MPU9250)
@@ -671,13 +670,13 @@ void loop() {
   sensor_update("my", String(my));
   sensor_update("mz", String(mz));
 #if !defined(ARDUINO_M5Stack_ATOM) && !defined(M5SCRATCH_DEMO)
-  M5.Lcd.println("mag:(" + String(mx) + ", " + String(my) + ", " + String(mz) + ")");
+  lcd.println("mag:(" + String(mx) + ", " + String(my) + ", " + String(mz) + ")");
 #endif
 
   // sensor-update heading
   sensor_update("heading", String(heading));
 #if !defined(ARDUINO_M5Stack_ATOM) && !defined(M5SCRATCH_DEMO)
-  M5.Lcd.println("heading:" + String(heading));
+  lcd.println("heading:" + String(heading));
 #endif
 #endif
 
@@ -686,12 +685,12 @@ void loop() {
   sensor_update("roll", String(roll));
   sensor_update("yaw", String(yaw));
 #if !defined(ARDUINO_M5Stack_ATOM) && !defined(M5SCRATCH_DEMO)
-  M5.Lcd.println("p,r,y:(" + String(pitch) + ", " + String(roll) + ", " + String(yaw) + ")");
+  lcd.println("p,r,y:(" + String(pitch) + ", " + String(roll) + ", " + String(yaw) + ")");
 #endif
 
   // sensor-update temp
 #if !defined(ARDUINO_M5Stack_ATOM) && !defined(M5SCRATCH_DEMO)
-  M5.Lcd.println("temp:" + String(temp));
+  lcd.println("temp:" + String(temp));
 #endif
   sensor_update("temp", String(temp));
 
