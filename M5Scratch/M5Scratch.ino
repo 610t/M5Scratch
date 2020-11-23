@@ -421,7 +421,7 @@ void loop() {
             break;
           case 'z':
             // Cat zoom value
-            z = constrain(int(getValue('z', msg).toFloat()), 1, 10);
+            z = constrain(getValue('z', msg).toFloat(), 1, 10);
             break;
           case 't':
             // Cat direction theta
