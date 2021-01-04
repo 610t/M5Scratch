@@ -34,6 +34,8 @@
    This program is demonstration that Scrath Remote Sensor Protocol with M5Stack.
 */
 
+#define DEBUG_SERIAL false
+
 /*
   network.h contains network information below:
 
@@ -134,7 +136,7 @@ void setup() {
 #if defined(ARDUINO_M5Stack_Core_ESP32)
   // for LovyanLauncher
   if (digitalRead(BUTTON_A_PIN) == 0) {
-    Serial.println("Will Load menu binary");
+    if(DEBUG_SERIAL) Serial.println("Will Load menu binary");
     updateFromFS(SD);
     ESP.restart();
   }
@@ -269,7 +271,7 @@ void setup() {
 
 String getValue(char name, String msg) {
   msg.replace(String(name) + " ", "");
-  Serial.println("str:\"" + String(name) + ":" + String(msg) + "\"");
+  if(DEBUG_SERIAL) Serial.println("str:\"" + String(name) + ":" + String(msg) + "\"");
   return msg;
 }
 
@@ -282,13 +284,13 @@ void broadcast(String msg) {
   strcpy(scmd + 4, buf);
   //scmd[3] = (uint8_t)strlen(scmd + 4);
   scmd[3] = cmd.length();
-  Serial.println(">pre broadcast:" + String(scmd + 4));
+  if(DEBUG_SERIAL) Serial.println(">pre broadcast:" + String(scmd + 4));
   client.setTimeout(100);
   //  if (client.write((const uint8_t*)scmd, 4 + strlen(scmd + 4))) {
   if (client.write((const uint8_t*)scmd, 4 + cmd.length())) {
-    Serial.println(">>broadcast:" + msg + " ok");
+    if(DEBUG_SERIAL) Serial.println(">>broadcast:" + msg + " ok");
   } else {
-    Serial.println(">>broadcast:" + msg + " err");
+    if(DEBUG_SERIAL) Serial.println(">>broadcast:" + msg + " err");
   }
 }
 
@@ -320,12 +322,12 @@ void loop() {
 
   M5.update();
 
-  Serial.println("Before client connect");
+  if(DEBUG_SERIAL) Serial.println("Before client connect");
   while (!client.connect(host, Port)) {
     Serial.println("Scratch Host IP is {" + String(host) + "}");
     Serial.println("connection failed");
   }
-  Serial.println("create tcp ok");
+  if(DEBUG_SERIAL) Serial.println("create tcp ok");
 
   while (!client.connected()) {
     Serial.println("Stop connection");
@@ -335,37 +337,37 @@ void loop() {
     client.connect(host, Port);
     Serial.println("After client.connect");
   }
-  Serial.println("Client connected");
+  if(DEBUG_SERIAL) Serial.println("Client connected");
 
   // Read all from server and print them to Serial.
   uint32_t len = 0;
   String msg = "";
   char *c;
 
-  Serial.println("Let us go to read messages.");
+  if(DEBUG_SERIAL) Serial.println("Let us go to read messages.");
 
   //// Receive msg
   len = 0;
   int av = client.available();
-  Serial.println("available:" + String(av));
+  if(DEBUG_SERIAL) Serial.println("available:" + String(av));
   //if (av > 0) {
   client.setTimeout(100);
   len = client.readBytes(buffer, sizeof(buffer));
   //}
 
-  Serial.println("Get length:" + String(len));
+  if(DEBUG_SERIAL) Serial.println("Get length:" + String(len));
 
   while (len > 0) {
 #if !defined(ARDUINO_M5Stack_ATOM) && !defined(M5SCRATCH_DEMO)
     lcd.setCursor(0, 0);
 #endif
-    Serial.print("Received:[");
+    if(DEBUG_SERIAL) Serial.print("Received:[");
     // Skip 4 byte message header and get string.
     for (uint32_t i = 4; i < len; i++) {
-      Serial.print((char)buffer[i]);
+      if(DEBUG_SERIAL) Serial.print((char)buffer[i]);
       msg += (char)buffer[i];
     }
-    Serial.print("]\r\n");
+    if(DEBUG_SERIAL) Serial.print("]\r\n");
 
     while ((!msg.startsWith("broadcast") && !msg.startsWith("sensor-update")) && msg.length() > 0 ) {
       msg = msg.substring(1);
@@ -375,7 +377,7 @@ void loop() {
       // message
       msg.replace("broadcast ", "");
       msg.replace("\"", "");
-      Serial.println("broadcast:\"" + msg + "\"");
+      if(DEBUG_SERIAL) Serial.println("broadcast:\"" + msg + "\"");
 #if !defined(ARDUINO_M5Stack_ATOM) && !defined(M5SCRATCH_DEMO)
       lcd.println("broadcast:\"" + msg + "\"");
 #endif
@@ -447,7 +449,7 @@ void loop() {
         flip = flip ? 0 : 1;
         sprites[flip].clear();
 
-        Serial.println("(x,y)=(" + String(x) + "," + String(y) + ")");
+        if(DEBUG_SERIAL) Serial.println("(x,y)=(" + String(x) + "," + String(y) + ")");
         icons.pushRotateZoom(&sprites[flip]
                              , int((x + 240) / 480.0 * lcd_width)
                              , 240 - int((y + 180) / 360.0 * lcd_height) - yy
@@ -493,7 +495,7 @@ void loop() {
       int rl = constrain(int((r / 255.0) * 0x20), 0, 0x20);
       int gl = constrain(int((g / 255.0) * 0x20), 0, 0x20);
       int bl = constrain(int((b / 255.0) * 0x20), 0, 0x20);
-      Serial.println("LED RGB:(" + String(rl) + ", " + String(gl) + ", " + String(bl) + ")");
+      if(DEBUG_SERIAL) Serial.println("LED RGB:(" + String(rl) + ", " + String(gl) + ", " + String(bl) + ")");
 
       setBuff(rl, gl, bl);
       M5.dis.displaybuff(DisBuff);
@@ -511,7 +513,7 @@ void loop() {
       lcd.fillScreen(rgb);
       lcd.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
 #endif
-      Serial.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
+      if(DEBUG_SERIAL) Serial.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
       // msg
       //lcd.setCursor(0, 100);
       //lcd.setTextSize(5);
@@ -519,7 +521,7 @@ void loop() {
       lcd.println("s:\"" + s + "\"");
 #endif
     } else {
-      Serial.println("NOP");
+      if(DEBUG_SERIAL) Serial.println("NOP");
     }
 
     old_rgb = rgb;
@@ -562,7 +564,7 @@ void loop() {
     while (Wire.available())
     {
       char c = Wire.read(); // receive a byte as character
-      Serial.print(c);         // print the character
+      if(DEBUG_SERIAL) Serial.print(c);         // print the character
       broadcast("Key_" + String(c));
     }
   }
