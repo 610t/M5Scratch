@@ -74,8 +74,9 @@ MPU9250 Imu;
 #endif
 
 #define FACES_KEYBOARD_I2C_ADDR 0x08
-#elif defined(ARDUINO_M5STACK_Core32)
+#elif defined(ARDUINO_M5STACK_Core2)
 #include <M5Core2.h>
+#define Imu IMU
 #elif defined(ARDUINO_M5Stack_ATOM)
 #include <M5Atom.h>
 
@@ -125,6 +126,11 @@ String ip = "";
 WiFiClient client;
 
 void setup() {
+  // Init Serial
+  Serial.begin(115200);
+  Serial.print("Searial start");
+  delay(10);
+
   // Init M5
 #if defined(ARDUINO_M5Stack_ATOM)
   M5.begin(true, false, true);
@@ -141,10 +147,6 @@ void setup() {
     ESP.restart();
   }
 #endif
-
-  // Init Serial
-  Serial.begin(115200);
-  delay(10);
 
 #if defined(M5SCRATCH_DEMO)
   lcd.init();
@@ -183,7 +185,7 @@ void setup() {
 #if defined(ARDUINO_M5Stick_C)
   lcd.setRotation(3);
   lcd.setTextSize(1);
-#elif defined(ARDUINO_M5Stack_Core_ESP32)
+#elif defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_Core2)
   lcd.setTextSize(2);
 #endif
   lcd.println("Welcome to Scratch Remote  Sensor!!");
@@ -638,7 +640,7 @@ void loop() {
   // Rotation is different from landscape.
   sensor_update("ax", String(-1 * 240 * ay));
   sensor_update("ay", String(+1 * 180 * ax));
-#elif defined(ARDUINO_M5Stack_Core_ESP32)
+#elif defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_Core2)
   sensor_update("ax", String(-1 * 240 * ax));
   sensor_update("ay", String(-1 * 180 * ay));
 #elif defined(ARDUINO_M5Stack_ATOM)
