@@ -72,7 +72,7 @@ MPU9250 IMU;
 #endif
 
 #define FACES_KEYBOARD_I2C_ADDR 0x08
-#elif defined(ARDUINO_M5STACK_Core2)
+#elif defined(ARDUINO_M5STACK_Core32)
 #include <M5Core2.h>
 #elif defined(ARDUINO_M5Stack_ATOM)
 #include <M5Atom.h>
@@ -184,7 +184,7 @@ void setup() {
 #elif defined(ARDUINO_M5Stack_Core_ESP32)
   lcd.setTextSize(2);
 #endif
-  lcd.println("Welcome to Scratch Remoto Sensor!!");
+  lcd.println("Welcome to Scratch Remote Sensor!!");
 #endif
 
 #if !defined(M5SCRATCH_DEMO)
