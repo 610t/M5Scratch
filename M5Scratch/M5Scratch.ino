@@ -262,6 +262,7 @@ void setup() {
   }
 #endif
   Serial.println("Scratch Host IP is {" + String(host) + "}");
+  lcd.println("Scratch Host IP is " + String(host));
 
   delay(1000);
 }
@@ -465,7 +466,8 @@ void loop() {
           sprites[flip].setCursor(0, 0);
           sprites[flip].printf("fps:%d\n", fps);
           sprites[flip].printf("(x,y)=(%d,%d):t=%d,z=%d\n", int(x), int(y), int(t), int(z));
-          sprites[flip].printf("(r,g,b)=(%d,%d,%d)", r, g, b);
+          sprites[flip].printf("(r,g,b)=(%d,%d,%d)\n", r, g, b);
+          sprites[flip].printf("S:%s\n", s);
         }
         size_t len = sprite_height * lcd_width;
         if (yy + sprite_height > lcd_height) {
