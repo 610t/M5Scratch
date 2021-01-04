@@ -68,7 +68,7 @@ const int Port = 42001;
 
 #if defined(M5STACK_MPU9250)
 #include "utility/MPU9250.h"
-MPU9250 IMU;
+MPU9250 Imu;
 #endif
 
 #define FACES_KEYBOARD_I2C_ADDR 0x08
@@ -184,7 +184,7 @@ void setup() {
 #elif defined(ARDUINO_M5Stack_Core_ESP32)
   lcd.setTextSize(2);
 #endif
-  lcd.println("Welcome to Scratch Remote Sensor!!");
+  lcd.println("Welcome to Scratch Remote  Sensor!!");
 #endif
 
 #if !defined(M5SCRATCH_DEMO)
@@ -219,15 +219,15 @@ void setup() {
 
   // Accel & gyro (& mag for M5Stack)
 #if !defined(M5STACK_MPU9250)
-  M5.IMU.Init();
+  M5.Imu.Init();
 #else
-  IMU.MPU9250SelfTest(IMU.SelfTest);
+  Imu.MPU9250SelfTest(Imu.SelfTest);
 
-  IMU.calibrateMPU9250(IMU.gyroBias, IMU.accelBias);
-  IMU.initMPU9250();
+  Imu.calibrateMPU9250(Imu.gyroBias, Imu.accelBias);
+  Imu.initMPU9250();
 
   delay(500);
-  IMU.initAK8963(IMU.magCalibration);
+  Imu.initAK8963(Imu.magCalibration);
 #endif
 
   // LED
@@ -592,34 +592,34 @@ void loop() {
   float temp = 0;
 
 #if !defined(M5STACK_MPU9250)
-  M5.IMU.getAccelData(&ax, &ay, &az);         // get accel
-  M5.IMU.getGyroAdc(&gyroX, &gyroY, &gyroZ);  // get gyro
-  M5.IMU.getTempData(&temp);                  // get temp
+  M5.Imu.getAccelData(&ax, &ay, &az);         // get accel
+  M5.Imu.getGyroAdc(&gyroX, &gyroY, &gyroZ);  // get gyro
+  M5.Imu.getTempData(&temp);                  // get temp
 #else
-  if (IMU.readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01)
+  if (Imu.readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01)
   {
     // get accel
-    IMU.readAccelData(IMU.accelCount);  // Read the x/y/z adc values
-    IMU.getAres();
-    ax = (float)IMU.accelCount[0] * IMU.aRes; // - accelBias[0];
-    ay = (float)IMU.accelCount[1] * IMU.aRes; // - accelBias[1];
-    az = (float)IMU.accelCount[2] * IMU.aRes; // - accelBias[2];
+    Imu.readAccelData(Imu.accelCount);  // Read the x/y/z adc values
+    Imu.getAres();
+    ax = (float)Imu.accelCount[0] * Imu.aRes; // - accelBias[0];
+    ay = (float)Imu.accelCount[1] * Imu.aRes; // - accelBias[1];
+    az = (float)Imu.accelCount[2] * Imu.aRes; // - accelBias[2];
 
     // get gyro
-    IMU.readGyroData(IMU.gyroCount);
-    IMU.getGres();
+    Imu.readGyroData(Imu.gyroCount);
+    Imu.getGres();
 
-    gyroX = (float)IMU.gyroCount[0] * IMU.gRes;
-    gyroY = (float)IMU.gyroCount[1] * IMU.gRes;
-    gyroZ = (float)IMU.gyroCount[2] * IMU.gRes;
+    gyroX = (float)Imu.gyroCount[0] * Imu.gRes;
+    gyroY = (float)Imu.gyroCount[1] * Imu.gRes;
+    gyroZ = (float)Imu.gyroCount[2] * Imu.gRes;
 
     // get magnetic
-    IMU.readMagData(IMU.magCount);
-    IMU.getMres();
+    Imu.readMagData(Imu.magCount);
+    Imu.getMres();
 
-    mx = (float)IMU.magCount[0] * IMU.mRes * IMU.magCalibration[0] - 470;
-    my = (float)IMU.magCount[1] * IMU.mRes * IMU.magCalibration[1] - 120;
-    mz = (float)IMU.magCount[2] * IMU.mRes * IMU.magCalibration[2] - 125;
+    mx = (float)Imu.magCount[0] * Imu.mRes * Imu.magCalibration[0] - 470;
+    my = (float)Imu.magCount[1] * Imu.mRes * Imu.magCalibration[1] - 120;
+    mz = (float)Imu.magCount[2] * Imu.mRes * Imu.magCalibration[2] - 125;
 
     // get heading
     float offset_mx = 1944.21;
@@ -627,10 +627,10 @@ void loop() {
     heading = atan2(my - offset_my, mx - offset_mx) * 180.0 / M_PI;
 
     // get temp
-    IMU.tempCount = IMU.readTempData();
-    temp = ((float) IMU.tempCount) / 333.87 + 21.0;
+    Imu.tempCount = Imu.readTempData();
+    temp = ((float) Imu.tempCount) / 333.87 + 21.0;
 
-    IMU.updateTime();
+    Imu.updateTime();
   }
 #endif
 
