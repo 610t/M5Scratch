@@ -59,6 +59,8 @@ const int Port = 42001;
 
 #if defined(ARDUINO_M5Stick_C)
 #include <M5StickC.h>
+#elif defined(ARDUINO_M5Stick_C_Plus)
+#include <M5StickCPlus.h>
 #elif defined(ARDUINO_M5Stack_Core_ESP32)
 // #define M5STACK_MPU6886
 #define M5STACK_MPU9250
@@ -74,6 +76,8 @@ MPU9250 Imu;
 #endif
 
 #define FACES_KEYBOARD_I2C_ADDR 0x08
+#elif defined(ARDUINO_M5STACK_TOUGH)
+#include <M5Tough.h>
 #elif defined(ARDUINO_M5STACK_Core2)
 #include <M5Core2.h>
 #define Imu IMU
@@ -120,7 +124,9 @@ static LGFX_Sprite icons;
 static int_fast16_t sprite_height;
 #endif
 
+#if !defined(ARDUINO_M5STACK_TOUGH) && !defined(ARDUINO_M5Stick_C_Plus)
 #include "utility/MahonyAHRS.h"
+#endif
 
 String ip = "";
 WiFiClient client;
@@ -182,7 +188,7 @@ void setup() {
   lcd.setAddrWindow(0, 0, lcd_width, lcd_height);
 #endif
 #if !defined(ARDUINO_M5Stack_ATOM)
-#if defined(ARDUINO_M5Stick_C)
+#if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
   lcd.setRotation(3);
   lcd.setTextSize(1);
 #elif defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_Core2)
@@ -222,6 +228,7 @@ void setup() {
   digitalWrite(5, HIGH);
 
   // Accel & gyro (& mag for M5Stack)
+#if !defined(ARDUINO_M5STACK_TOUGH)
 #if !defined(M5STACK_MPU9250)
   M5.Imu.Init();
 #else
@@ -233,15 +240,16 @@ void setup() {
   delay(500);
   Imu.initAK8963(Imu.magCalibration);
 #endif
+#endif
 
   // LED
-#if defined(ARDUINO_M5Stick_C)
+#if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
   pinMode(M5_LED, OUTPUT);
   digitalWrite(M5_LED, LOW);
 #endif
 
   // Button
-#if defined(ARDUINO_M5Stick_C)
+#if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
   pinMode(M5_BUTTON_HOME, INPUT);
   pinMode(M5_BUTTON_RST, INPUT);
 #endif
@@ -407,7 +415,7 @@ void loop() {
         } else if (msg.startsWith("l") == true) {
           // LED on/off
           led =  int(getValue('l', msg).toFloat());
-#if defined(ARDUINO_M5Stick_C)
+#if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
           digitalWrite(M5_LED, led);
 #endif
         } else if (msg.startsWith("x") == true) {
@@ -524,7 +532,7 @@ void loop() {
   broadcast("test");
 
   // broadcast by button
-#if defined(ARDUINO_M5Stick_C)
+#if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
   if (digitalRead(M5_BUTTON_HOME) == LOW) {
     broadcast("BtnA");
   }
@@ -587,6 +595,7 @@ void loop() {
 
   float temp = 0;
 
+#if !defined(ARDUINO_M5STACK_TOUGH)
 #if !defined(M5STACK_MPU9250)
   M5.Imu.getAccelData(&ax, &ay, &az);         // get accel
   M5.Imu.getGyroAdc(&gyroX, &gyroY, &gyroZ);  // get gyro
@@ -630,13 +639,16 @@ void loop() {
   }
 #endif
 
+#if !defined(ARDUINO_M5Stick_C_Plus)
   // Calculate pitch, roll, yaw
   MahonyAHRSupdateIMU(gyroX, gyroY, gyroZ, ax, ay, az, &pitch, &roll, &yaw);
+#endif
+#endif
 
   // send sensor-update
 
   // sensor-update accel
-#if defined(ARDUINO_M5Stick_C)
+#if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
   // Rotation is different from landscape.
   sensor_update("ax", String(-1 * 240 * ay));
   sensor_update("ay", String(+1 * 180 * ax));
@@ -660,6 +672,7 @@ void loop() {
   lcd.println("gyro:(" + String(gyroX) + ", " + String(gyroY) + ", " + String(gyroZ) + ")");
 #endif
 
+#if !defined(ARDUINO_M5STACK_TOUGH)
 #if defined(M5STACK_MPU9250)
   // sensor-update magnetic
   sensor_update("mx", String(mx));
@@ -673,6 +686,7 @@ void loop() {
   sensor_update("heading", String(heading));
 #if !defined(ARDUINO_M5Stack_ATOM) && !defined(M5SCRATCH_DEMO)
   lcd.println("heading:" + String(heading));
+#endif
 #endif
 #endif
 
