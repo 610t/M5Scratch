@@ -59,8 +59,10 @@ const int Port = 42001;
 
 #if defined(ARDUINO_M5Stick_C)
 #include <M5StickC.h>
+#define ROTATION 0
 #elif defined(ARDUINO_M5Stick_C_Plus)
 #include <M5StickCPlus.h>
+#define ROTATION 0
 #elif defined(ARDUINO_M5Stack_Core_ESP32)
 // #define M5STACK_MPU6886
 #define M5STACK_MPU9250
@@ -69,6 +71,7 @@ const int Port = 42001;
 
 #include <M5Stack.h>
 #include <M5StackUpdater.h>
+#define ROTATION 1
 
 #if defined(M5STACK_MPU9250)
 #include "utility/MPU9250.h"
@@ -80,6 +83,7 @@ MPU9250 Imu;
 #include <M5Tough.h>
 #elif defined(ARDUINO_M5STACK_Core2)
 #include <M5Core2.h>
+#define ROTATION 1
 #define Imu IMU
 #elif defined(ARDUINO_M5Stack_ATOM)
 #include <M5Atom.h>
@@ -188,8 +192,8 @@ void setup() {
   lcd.setAddrWindow(0, 0, lcd_width, lcd_height);
 #endif
 #if !defined(ARDUINO_M5Stack_ATOM)
+  lcd.setRotation(ROTATION);
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
-  lcd.setRotation(3);
   lcd.setTextSize(1);
 #elif defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_Core2)
   lcd.setTextSize(2);
@@ -326,9 +330,16 @@ void loop() {
   uint8_t buffer[128] = {0};
   int r = 0, g = 0, b = 0, led = 0;
   uint16_t rgb, old_rgb;
-  int circle_r = 40;
+  int circle_r;
   String s;
   char* str;
+
+  // Set circle radius
+  if (ROTATION == 1 || ROTATION == 3) {
+    circle_r = lcd_width / 12;
+  } else if (ROTATION == 0 || ROTATION == 2) {
+    circle_r = lcd_height / 12;
+  }
 
   M5.update();
 
