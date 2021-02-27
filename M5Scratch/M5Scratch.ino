@@ -81,6 +81,7 @@ MPU9250 Imu;
 #define FACES_KEYBOARD_I2C_ADDR 0x08
 #elif defined(ARDUINO_M5STACK_TOUGH)
 #include <M5Tough.h>
+#define ROTATION 1
 #elif defined(ARDUINO_M5STACK_Core2)
 #include <M5Core2.h>
 #define ROTATION 1
