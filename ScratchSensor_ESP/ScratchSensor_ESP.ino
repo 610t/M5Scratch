@@ -139,6 +139,12 @@ void setup() {
   dht.begin();
 }
 
+String getValue(char name, String msg) {
+  msg.replace(String(name) + " ", "");
+  if (DEBUG_SERIAL) Serial.println("str:\"" + String(name) + ":" + String(msg) + "\"");
+  return msg;
+}
+
 void broadcast(String msg) {
   char scmd[32] = {0};
   char buf[100] = {0};
@@ -238,44 +244,34 @@ void loop() {
           msg.trim();
           switch (msg.charAt(0)) {
             case 'r':
-              msg.replace("r ", "");
-              r = int(msg.toFloat());
-              Serial.println("{R:" + String(r) + "}");
+              r = constrain(int(getValue('r', msg).toFloat()), 0, 255);
               break;
             case 'g':
-              msg.replace("g ", "");
-              g = int(msg.toFloat());
-              Serial.println("{G:" + String(g) + "}");
+              g = constrain(int(getValue('g', msg).toFloat()), 0, 255);
               break;
             case 'b':
-              msg.replace("b ", "");
-              b = int(msg.toFloat());
-              Serial.println("{B:" + String(b) + "}");
+              b = constrain(int(getValue('b', msg).toFloat()), 0, 255);
               break;
             case 'x':
-              msg.replace("x ", "");
-              x = int((msg.toFloat() + 240) / 480 * 8);
-              Serial.println("{x:" + String(b) + "}");
+              x = constrain((int((getValue('x', msg).toFloat() + 240) / 480 * 8)), 0, 7);
               break;
             case 'y':
-              msg.replace("y ", "");
-              y = int((msg.toFloat() + 180) / 360 * 8);
-              Serial.println("{y:" + String(b) + "}");
+              y = constrain((int((getValue('y', msg).toFloat() + 180) / 360 * 8)), 0, 7);
               break;
             case 'i':
-              led_int = constrain(int(msg.toFloat()), 0, 7);
-              Serial.println("{i:" + String(b) + "}");
+              led_int = constrain(int(getValue('i', msg).toFloat()), 0, 7);
               break;
           }
-          Serial.println("{{msg:" + msg + "}}");
+          if (DEBUG_SERIAL) Serial.println("{{msg:" + msg + "}}");
 
           // Skip var_value
           while (msg.charAt(0) != ' ' && msg.length() > 0) {
             msg = msg.substring(1);
           }
-          Serial.println("{{msg2:" + msg + "}}");
+          if (DEBUG_SERIAL) Serial.println("{{msg2:" + msg + "}}");
         }
-        Serial.println("{RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")}");
+        if (DEBUG_SERIAL) Serial.println("{RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")}");
+        Serial.println("{(x,y),i:(" + String(x) + ", " + String(y) + "), " + String(led_int) + ")}");
       } else {
         if (DEBUG_SERIAL) Serial.println("NOP");
       }
