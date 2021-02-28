@@ -40,6 +40,11 @@
 
 #define DEBUG_SERIAL false
 
+// Edit these 3 lines for Network settings.
+const char* ssid     = "YOUR SSID";
+const char* password = "YOUR PASSWORD";
+const char* host = "SCRATCH HOST IP ADDRESS";
+
 /*
    Sensors & Actuators
 
@@ -49,10 +54,10 @@
    D2(GPIO4,21):  SDA, RGB LED
    D3(GPIO0,17):  Button switch
    D4(GPIO2,16):  DHT sensor (DHT11), RGB LED
-   D5(,18):  Matrix LED CLK, Buzzer
-   D6(,19)
-   D7(,23):  Matrix LED DIN
-   D8(,05)
+   D5(GPIO14,18): Matrix LED CLK, Buzzer
+   D6(GPIO12,19)
+   D7(GPIO13,23): Matrix LED DIN
+   D8(GPIO15,05)
    D13():      Built-in LED
    A0(,SVP):
 
@@ -76,11 +81,6 @@
 #define BUTTONPIN   D3
 #define DHTPIN      D4
 #endif
-
-// Edit these 3 lines for Network settings.
-const char* ssid     = "YOUR SSID";
-const char* password = "YOUR PASSWORD";
-const char* host = "SCRATCH HOST IP ADDRESS";
 
 #include <WiFi.h>
 #include <Adafruit_NeoPixel.h>
