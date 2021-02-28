@@ -83,19 +83,26 @@ const char* host = "SCRATCH HOST IP ADDRESS";
 #endif
 
 #include <WiFi.h>
-#include <Adafruit_NeoPixel.h>
 
+// RGB LED
+#include <Adafruit_NeoPixel.h>
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(1, RGBLEDPIN, NEO_GRB + NEO_KHZ800);
 
+// DHT for temperature & humidity
 #include "DHT.h"
-
 #define DHTTYPE DHT11
-
 DHT dht(DHTPIN, DHTTYPE);
+
+// 8x8 Matrix LED
+#include <WEMOS_Matrix_LED.h>
+MLED mled(0);
 
 const int Port = 42001;
 
 int r = 0, g = 0, b = 0;
+int x, y;
+int old_x, old_y;
+int led_int;
 
 WiFiClient client;
 
@@ -245,6 +252,20 @@ void loop() {
               b = int(msg.toFloat());
               Serial.println("{B:" + String(b) + "}");
               break;
+            case 'x':
+              msg.replace("x ", "");
+              x = int((msg.toFloat() + 240) / 480 * 8);
+              Serial.println("{x:" + String(b) + "}");
+              break;
+            case 'y':
+              msg.replace("y ", "");
+              y = int((msg.toFloat() + 180) / 360 * 8);
+              Serial.println("{y:" + String(b) + "}");
+              break;
+            case 'i':
+              led_int = constrain(int(msg.toFloat()), 0, 7);
+              Serial.println("{i:" + String(b) + "}");
+              break;
           }
           Serial.println("{{msg:" + msg + "}}");
 
@@ -264,6 +285,14 @@ void loop() {
     // RGB LED
     pixels.setPixelColor(0, pixels.Color(r, g, b));
     pixels.show();
+
+    // 8x8 Matrix LED
+    mled.intensity = led_int;
+    mled.dot(old_x, old_y, 0);
+    mled.dot(x, y);
+    mled.display();
+    old_x = x;
+    old_y = y;
 
     // send broadcast message
     if (digitalRead(BUTTONPIN) == LOW) {
