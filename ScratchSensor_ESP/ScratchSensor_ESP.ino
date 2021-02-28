@@ -42,10 +42,24 @@
    Sensors & Actuators
 
    for WeMOS D1 mini / ESPr Developer (for D1 Mini ESP32)
-   D2(GPIO4):  RGB LED
-   D3(GPIO0):  Button switch
-   D4(GPIO2):  DHT sensor (DHT11)
+   D0(,26):
+   D1(GPIO5,22):  SCL
+   D2(GPIO4,21):  SDA, RGB LED
+   D3(GPIO0,17):  Button switch
+   D4(GPIO2,16):  DHT sensor (DHT11), RGB LED
+   D5(,18):  Matrix LED CLK, Buzzer
+   D6(,19)
+   D7(,23):  Matrix LED DIN
+   D8(,05)
    D13():      Built-in LED
+   A0(,SVP):
+
+  I2C(D1:SCL, D2:SDA)
+    OLED
+    Barometric Pressure(HP303B)
+    SHT30
+    DHT
+    Ambient light(BH1750)
 */
 // #define BOARD_WEMOS
 
@@ -57,7 +71,7 @@
 #elif defined(BOARD_WEMOS)
 // #define LED_BUILTIN 1
 #define RGBLEDPIN   D2
-#define BUTTONPIN   D3
+#define BUTTONPIN   D3                                            
 #define DHTPIN      D4
 #endif
 
