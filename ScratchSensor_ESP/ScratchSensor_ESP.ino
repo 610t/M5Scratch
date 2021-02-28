@@ -38,6 +38,8 @@
 
 */
 
+#define DEBUG_SERIAL false
+
 /*
    Sensors & Actuators
 
@@ -93,8 +95,6 @@ DHT dht(DHTPIN, DHTTYPE);
 
 const int Port = 42001;
 
-int ledOn = false;
-
 int r = 0, g = 0, b = 0;
 
 WiFiClient client;
@@ -141,13 +141,13 @@ void broadcast(String msg) {
   strcpy(scmd + 4, buf);
   //scmd[3] = (uint8_t)strlen(scmd + 4);
   scmd[3] = cmd.length();
-  Serial.println(">pre broadcast:" + String(scmd + 4));
+  if (DEBUG_SERIAL) Serial.println(">pre broadcast:" + String(scmd + 4));
   client.setTimeout(100);
   //  if (client.write((const uint8_t*)scmd, 4 + strlen(scmd + 4))) {
   if (client.write((const uint8_t*)scmd, 4 + cmd.length())) {
-    Serial.println(">>broadcast:" + msg + " ok");
+    if (DEBUG_SERIAL) Serial.println(">>broadcast:" + msg + " ok");
   } else {
-    Serial.println(">>broadcast:" + msg + " err");
+    if (DEBUG_SERIAL) Serial.println(">>broadcast:" + msg + " err");
   }
 }
 
@@ -161,10 +161,10 @@ void sensor_update(String varName, String varValue) {
   scmd[3] = (uint8_t)strlen(scmd + 4);
   client.setTimeout(100);
   if (client.write((const uint8_t*)scmd, 4 + strlen(scmd + 4))) {
-    Serial.println("sensor-update ok");
+    if (DEBUG_SERIAL) Serial.println("sensor-update ok");
     return;
   } else {
-    Serial.println("sensor-update err");
+    if (DEBUG_SERIAL) Serial.println("sensor-update err");
     return;
   }
 }
@@ -201,14 +201,14 @@ void loop() {
     uint32_t len = client.readBytes(buffer, sizeof(buffer));
     String msg = "";
     if (len > 0) {
-      Serial.print("Received:[");
+      if (DEBUG_SERIAL) Serial.print("Received:[");
       for (uint32_t i = 0; i < len; i++) {
-        Serial.print((char)buffer[i]);
+        if (DEBUG_SERIAL) Serial.print((char)buffer[i]);
         if (i >= 4) { // Skip 4 byte message header
           msg += (char)buffer[i];
         }
       }
-      Serial.print("]\r\n");
+      if (DEBUG_SERIAL) Serial.print("]\r\n");
 
       // Skip until broadcast or sensor-update
       while ((!msg.startsWith("broadcast") && !msg.startsWith("sensor-update")) && msg.length() > 0 )
@@ -256,8 +256,9 @@ void loop() {
         }
         Serial.println("{RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")}");
       } else {
-        Serial.println("NOP");
+        if (DEBUG_SERIAL) Serial.println("NOP");
       }
+      len = msg.length();
     }
 
     // RGB LED
@@ -265,18 +266,12 @@ void loop() {
     pixels.show();
 
     // send broadcast message
-    if (digitalRead(BUTTONPIN) != sw) {
-      broadcast("button");
-    } else {
-      if (stat == 1) {
-        stat = 0;
-      }
-    }
     if (digitalRead(BUTTONPIN) == LOW) {
       broadcast("btn");
     }
 
     sensor_update("v", String(value));
+    sensor_update("rand", String(random(255)));
 
     // Get DHT data
     t = NAN;
