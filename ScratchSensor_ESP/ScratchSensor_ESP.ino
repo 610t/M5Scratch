@@ -71,7 +71,7 @@
 #elif defined(BOARD_WEMOS)
 // #define LED_BUILTIN 1
 #define RGBLEDPIN   D2
-#define BUTTONPIN   D3                                            
+#define BUTTONPIN   D3
 #define DHTPIN      D4
 #endif
 
@@ -96,6 +96,8 @@ const int Port = 42001;
 int ledOn = false;
 
 int r = 0, g = 0, b = 0;
+
+WiFiClient client;
 
 void setup() {
   // Set up I/O mode
@@ -130,16 +132,52 @@ void setup() {
   dht.begin();
 }
 
+void broadcast(String msg) {
+  char scmd[32] = {0};
+  char buf[100] = {0};
+  String cmd = "broadcast \"" + msg + "\"";
+
+  cmd.toCharArray(buf, cmd.length() + 1);
+  strcpy(scmd + 4, buf);
+  //scmd[3] = (uint8_t)strlen(scmd + 4);
+  scmd[3] = cmd.length();
+  Serial.println(">pre broadcast:" + String(scmd + 4));
+  client.setTimeout(100);
+  //  if (client.write((const uint8_t*)scmd, 4 + strlen(scmd + 4))) {
+  if (client.write((const uint8_t*)scmd, 4 + cmd.length())) {
+    Serial.println(">>broadcast:" + msg + " ok");
+  } else {
+    Serial.println(">>broadcast:" + msg + " err");
+  }
+}
+
+void sensor_update(String varName, String varValue) {
+  char scmd[32] = {0};
+  char buf[100] = {0};
+  String cmd = "sensor-update \"" + varName + "\" " + varValue + " ";
+
+  cmd.toCharArray(buf, cmd.length() + 1);
+  sprintf(scmd + 4, buf);
+  scmd[3] = (uint8_t)strlen(scmd + 4);
+  client.setTimeout(100);
+  if (client.write((const uint8_t*)scmd, 4 + strlen(scmd + 4))) {
+    Serial.println("sensor-update ok");
+    return;
+  } else {
+    Serial.println("sensor-update err");
+    return;
+  }
+}
+
 int value = 0;
 
 void loop() {
   uint8_t buffer[128] = {0};
   float t, t_old, h, h_old;
 
-  delay(5000);
   ++value;
   // Blink Builtin LED
-  if(value % 2 == 1){
+  if (value % 2 == 1) {
     digitalWrite(LED_BUILTIN, HIGH);
   } else {
     digitalWrite(LED_BUILTIN, LOW);
@@ -148,9 +186,6 @@ void loop() {
   Serial.print("connecting to ");
   Serial.println(host);
 
-  // Use WiFiClient class to create TCP connections
-  WiFiClient client;
-
   if (!client.connect(host, Port)) {
     Serial.println("connection failed");
     return;
@@ -158,11 +193,7 @@ void loop() {
 
   Serial.print("create tcp ok\r\n");
 
-  char *broadcastcmd = "sensor-update \"v\" 0 ";
   for (uint32_t n = 0; n < 100000; n++) {
-    delay(10);
-    char scmd[32] = {0};
-    char dhtcmd[32] = {0};
     int sw, stat;
 
     // Read all from server and print them to Serial
@@ -235,37 +266,17 @@ void loop() {
 
     // send broadcast message
     if (digitalRead(BUTTONPIN) != sw) {
-      sw = digitalRead(BUTTONPIN); stat = 1;
-      strcpy(scmd + 4, "broadcast \"button\"");
-      scmd[3] = (uint8_t)strlen(scmd + 4);
-      client.write((const uint8_t*)scmd, 4 + strlen(scmd + 4));
+      broadcast("button");
     } else {
       if (stat == 1) {
         stat = 0;
       }
     }
     if (digitalRead(BUTTONPIN) == LOW) {
-      strcpy(scmd + 4, "sensor-update \"btn\" 1 ");
-      scmd[3] = (uint8_t)strlen(scmd + 4);
-      client.write((const uint8_t*)scmd, 4 + strlen(scmd + 4));
-    } else {
-      strcpy(scmd + 4, "sensor-update \"btn\" 0 ");
-      scmd[3] = (uint8_t)strlen(scmd + 4);
-      client.write((const uint8_t*)scmd, 4 + strlen(scmd + 4));
+      broadcast("btn");
     }
 
-    scmd[3] = (uint8_t)strlen(scmd + 4);
-
-    if (0 != strlen(scmd + 4)) {
-      for (uint32_t i = 0; i < 4 + strlen(broadcastcmd); i++) {
-        Serial.print(scmd[i]);
-      }
-      if (client.write((const uint8_t*)scmd, 4 + strlen(scmd + 4))) {
-        Serial.println("send ok");
-      } else {
-        Serial.println("send err");
-      }
-    }
+    sensor_update("v", String(value));
 
     // Get DHT data
     t = NAN;
@@ -276,39 +287,11 @@ void loop() {
     }
 
     if ( t != t_old ) {
-      char t_str[10];
-      dtostrf(t, 4, 2, t_str);
-
-      sprintf(dhtcmd + 4, "sensor-update \"t\" %s", t_str);
-
-      for (uint32_t i = 0; i < 4 + strlen(broadcastcmd); i++) {
-        Serial.print(dhtcmd[i]);
-      }
-
-      dhtcmd[3] = (uint8_t)strlen(dhtcmd + 4);
-      if (client.write((const uint8_t*)dhtcmd, 4 + strlen(dhtcmd + 4))) {
-        Serial.println("send ok");
-      } else {
-        Serial.println("send err");
-      }
+      sensor_update("t", String(t));
     }
 
     if ( h != h_old ) {
-      char h_str[10];
-      dtostrf(h, 4, 2, h_str);
-
-      sprintf(dhtcmd + 4, "sensor-update \"h\" %s", h_str);
-
-      for (uint32_t i = 0; i < 4 + strlen(broadcastcmd); i++) {
-        Serial.print(dhtcmd[i]);
-      }
-
-      dhtcmd[3] = (uint8_t)strlen(dhtcmd + 4);
-      if (client.write((const uint8_t*)dhtcmd, 4 + strlen(dhtcmd + 4))) {
-        Serial.println("send ok");
-      } else {
-        Serial.println("send err");
-      }
+      sensor_update("h", String(h));
     }
 
     // Store current h & t
