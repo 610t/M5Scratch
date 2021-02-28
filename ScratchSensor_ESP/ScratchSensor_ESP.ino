@@ -138,6 +138,12 @@ void loop() {
 
   delay(5000);
   ++value;
+  // Blink Builtin LED
+  if(value % 2 == 1){
+    digitalWrite(LED_BUILTIN, HIGH);
+  } else {
+    digitalWrite(LED_BUILTIN, LOW);
+  }
 
   Serial.print("connecting to ");
   Serial.println(host);
