@@ -68,18 +68,11 @@ const char* host = "SCRATCH HOST IP ADDRESS";
     DHT
     Ambient light(BH1750)
 */
-// #define BOARD_WEMOS
-
 #if defined(ARDUINO_D1_MINI32)
 // #define LED_BUILTIN 1
 #define RGBLEDPIN   21
 #define BUTTONPIN   17
 #define DHTPIN      16
-#elif defined(BOARD_WEMOS)
-// #define LED_BUILTIN 1
-#define RGBLEDPIN   D2
-#define BUTTONPIN   D3
-#define DHTPIN      D4
 #endif
 
 #include <WiFi.h>
