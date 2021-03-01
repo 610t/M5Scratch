@@ -69,7 +69,7 @@ const char* host = "SCRATCH HOST IP ADDRESS";
     OLED 0.66, 0.96
     Barometric Pressure(HP303B)
     SHT30
-    DHT
+    DHT12
     Ambient light(BH1750)
     TVOC and eCO2 sensor(SGP30)
 
@@ -108,6 +108,10 @@ BH1750 lightMeter;
 // Barometric Pressure (HP303B)
 #include <LOLIN_HP303B.h>
 LOLIN_HP303B HP303B;
+
+// SHT30 for temperature & humidity
+#include <WEMOS_SHT3X.h>
+SHT3X sht30(0x45);
 
 const int Port = 42001;
 
@@ -310,10 +314,21 @@ void loop() {
       // Ambient light
       sensor_update("lux", String(lightMeter.readLightLevel()));
 
-      // Get DHT data
-      sensor_update("temp", String(dht.readTemperature()));
-      sensor_update("hum", String(dht.readHumidity()));
+      // Get DHT data for temperature & humidity
+      sensor_update("temp_DHT_GPIO", String(dht.readTemperature()));
+      sensor_update("hum_DHT_GPIO", String(dht.readHumidity()));
 
+      // SHT30 is very slow.
+      // If you want to use this sensor, remove '//' at next line.
+      //#define USE_SHT30
+#if defined(USE_SHT30)
+      // Get SHT30 for temperature & humidity
+      if (sht30.get() == 0) {
+        sensor_update("temp_SHT30", String(sht30.cTemp));
+        sensor_update("hum_SHT30", String(sht30.humidity));
+      }
+#endif
+      // Pass counter(value) and random(rand).
       sensor_update("value", String(value));
       sensor_update("rand", String(random(255)));
 
@@ -324,7 +339,7 @@ void loop() {
 
       ret = HP303B.measureTempOnce(temperature);
       if (ret == 0) {
-        sensor_update("temp2", String(temperature));
+        sensor_update("temp_HP3030B", String(temperature));
       }
       ret = HP303B.measurePressureOnce(pressure);
       if (ret == 0) {
