@@ -49,15 +49,15 @@ const char* host = "SCRATCH HOST IP ADDRESS";
    Sensors & Actuators
 
    for WeMOS D1 mini32
-   D0(GPIO16,26): 
+   D0(GPIO16,26):
    D1(GPIO5,22):  SCL
    D2(GPIO4,21):  SDA, RGB LED
    D3(GPIO0,17):  Button switch, PIR
    D4(GPIO2,16):  DHT sensor (DHT11), 7 x RGB LED
    D5(GPIO14,18): Matrix LED CLK, Buzzer
-   D6(GPIO12,19): 
+   D6(GPIO12,19):
    D7(GPIO13,23): Matrix LED DIN
-   D8(GPIO15,05): 
+   D8(GPIO15,05):
    D13():      Built-in LED
    A0(,SVP):
 
@@ -86,6 +86,7 @@ const char* host = "SCRATCH HOST IP ADDRESS";
 #endif
 
 #include <WiFi.h>
+#include <Wire.h>
 
 // RGB LED
 #include <Adafruit_NeoPixel.h>
@@ -99,6 +100,10 @@ DHT dht(DHTPIN, DHTTYPE);
 // 8x8 Matrix LED
 #include <WEMOS_Matrix_LED.h>
 MLED mled(0);
+
+// Ambient Light (BH1750)
+#include <BH1750.h>
+BH1750 lightMeter;
 
 const int Port = 42001;
 
@@ -117,6 +122,9 @@ void setup() {
   // Initialize Serial
   Serial.begin(115200);
   delay(10);
+
+  // Initialize wire (I2C bus)
+  Wire.begin();
 
   // We start by connecting to a WiFi network
   Serial.println();
@@ -140,6 +148,9 @@ void setup() {
 
   // Initialize DHT sensor
   dht.begin();
+
+  // Initialize Ambient Light (BH1750)
+  lightMeter.begin();
 }
 
 String getValue(char name, String msg) {
@@ -283,6 +294,10 @@ void loop() {
 
       if (DEBUG_SERIAL) Serial.println("{RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")}");
       if (DEBUG_SERIAL) Serial.println("{(x,y),i:(" + String(x) + ", " + String(y) + "), " + String(led_int) + ")}");
+
+      // Ambient light
+      float lux = lightMeter.readLightLevel();
+      sensor_update("lux", String(lux));
     } else {
       if (DEBUG_SERIAL) Serial.println("NOP");
     }
