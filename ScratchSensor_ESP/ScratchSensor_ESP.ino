@@ -48,25 +48,35 @@ const char* host = "SCRATCH HOST IP ADDRESS";
 /*
    Sensors & Actuators
 
-   for WeMOS D1 mini / ESPr Developer (for D1 Mini ESP32)
-   D0(,26):
+   for WeMOS D1 mini32
+   D0(GPIO16,26): 
    D1(GPIO5,22):  SCL
    D2(GPIO4,21):  SDA, RGB LED
-   D3(GPIO0,17):  Button switch
-   D4(GPIO2,16):  DHT sensor (DHT11), RGB LED
+   D3(GPIO0,17):  Button switch, PIR
+   D4(GPIO2,16):  DHT sensor (DHT11), 7 x RGB LED
    D5(GPIO14,18): Matrix LED CLK, Buzzer
-   D6(GPIO12,19)
+   D6(GPIO12,19): 
    D7(GPIO13,23): Matrix LED DIN
-   D8(GPIO15,05)
+   D8(GPIO15,05): 
    D13():      Built-in LED
    A0(,SVP):
 
+  Can change GPIO (default).
+    7 x RGB LED: D0-D7(D4)
+    Buzzer:      D5-D8(D5)
+
   I2C(D1:SCL, D2:SDA)
-    OLED
+    OLED 0.66, 0.96
     Barometric Pressure(HP303B)
     SHT30
     DHT
     Ambient light(BH1750)
+    TVOC and eCO2 sensor(SGP30)
+
+  Other GPIOs.
+    TFT-1.4: https://www.wemos.cc/en/latest/d1_mini_shield/tft_1_4.html
+    TFT-2.4: https://www.wemos.cc/en/latest/d1_mini_shield/tft_2_4.html
+    ePaper:  IL3897 No information.
 */
 #if defined(ARDUINO_D1_MINI32)
 // #define LED_BUILTIN 1
