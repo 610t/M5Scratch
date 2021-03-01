@@ -216,15 +216,21 @@ void loop() {
     digitalWrite(LED_BUILTIN, LOW);
   }
 
-  Serial.print("connecting to ");
-  Serial.println(host);
-
-  if (!client.connect(host, Port)) {
+  while (!client.connect(host, Port)) {
+    Serial.println("Scratch Host IP is {" + String(host) + "}");
     Serial.println("connection failed");
-    return;
   }
+  if (DEBUG_SERIAL) Serial.print("create tcp ok\r\n");
 
-  Serial.print("create tcp ok\r\n");
+  while (!client.connected()) {
+    Serial.println("Stop connection");
+    client.stop();
+    Serial.println("Before client.connect");
+    //client.setTimeout(100);
+    client.connect(host, Port);
+    Serial.println("After client.connect");
+  }
+  if (DEBUG_SERIAL) Serial.println("Client connected");
 
   // Read all from server and print them to Serial
   client.setTimeout(100);
