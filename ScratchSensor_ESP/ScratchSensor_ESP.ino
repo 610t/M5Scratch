@@ -199,116 +199,111 @@ void loop() {
 
   Serial.print("create tcp ok\r\n");
 
-  for (uint32_t n = 0; n < 100000; n++) {
-    int sw, stat;
+  // Read all from server and print them to Serial
+  client.setTimeout(100);
+  uint32_t len = client.readBytes(buffer, sizeof(buffer));
+  String msg = "";
+  if (len > 0) {
+    if (DEBUG_SERIAL) Serial.print("Received:[");
+    for (uint32_t i = 4; i < len; i++) {
+      if (DEBUG_SERIAL) Serial.print((char)buffer[i]);
+      msg += (char)buffer[i];
+    }
+    if (DEBUG_SERIAL) Serial.print("]\r\n");
 
-    // Read all from server and print them to Serial
-    client.setTimeout(100);
-    uint32_t len = client.readBytes(buffer, sizeof(buffer));
-    String msg = "";
-    if (len > 0) {
-      if (DEBUG_SERIAL) Serial.print("Received:[");
-      for (uint32_t i = 0; i < len; i++) {
-        if (DEBUG_SERIAL) Serial.print((char)buffer[i]);
-        if (i >= 4) { // Skip 4 byte message header
-          msg += (char)buffer[i];
-        }
-      }
-      if (DEBUG_SERIAL) Serial.print("]\r\n");
+    // Skip until broadcast or sensor-update
+    while ((!msg.startsWith("broadcast") && !msg.startsWith("sensor-update")) && msg.length() > 0 )
+    {
+      msg = msg.substring(1);
+    }
 
-      // Skip until broadcast or sensor-update
-      while ((!msg.startsWith("broadcast") && !msg.startsWith("sensor-update")) && msg.length() > 0 )
-      {
-        msg = msg.substring(1);
-      }
+    if (msg.startsWith("broadcast") == true) {
+      // message
+      msg.replace("broadcast ", "");
+      msg.replace("\"", "");
+      Serial.print("{broadcast:" + msg + "}");
+    } else if (msg.startsWith("sensor-update")) {
+      // value
+      msg.replace("sensor-update ", "");
+      msg.replace("\"", "");
+      msg.trim();
 
-      if (msg.startsWith("broadcast") == true) {
-        // message
-        msg.replace("broadcast ", "");
-        msg.replace("\"", "");
-        Serial.print("{broadcast:" + msg + "}");
-      } else if (msg.startsWith("sensor-update")) {
-        // value
-        msg.replace("sensor-update ", "");
-        msg.replace("\"", "");
+      while (msg.length() > 0) {
         msg.trim();
-
-        while (msg.length() > 0) {
-          msg.trim();
-          switch (msg.charAt(0)) {
-            case 'r':
-              r = constrain(int(getValue('r', msg).toFloat()), 0, 255);
-              break;
-            case 'g':
-              g = constrain(int(getValue('g', msg).toFloat()), 0, 255);
-              break;
-            case 'b':
-              b = constrain(int(getValue('b', msg).toFloat()), 0, 255);
-              break;
-            case 'x':
-              x = constrain((int((getValue('x', msg).toFloat() + 240) / 480 * 8)), 0, 7);
-              break;
-            case 'y':
-              y = constrain((int((getValue('y', msg).toFloat() + 180) / 360 * 8)), 0, 7);
-              break;
-            case 'i':
-              led_int = constrain(int(getValue('i', msg).toFloat()), 0, 7);
-              break;
-          }
-          if (DEBUG_SERIAL) Serial.println("{{msg:" + msg + "}}");
-
-          // Skip var_value
-          while (msg.charAt(0) != ' ' && msg.length() > 0) {
-            msg = msg.substring(1);
-          }
-          if (DEBUG_SERIAL) Serial.println("{{msg2:" + msg + "}}");
+        switch (msg.charAt(0)) {
+          case 'r':
+            r = constrain(int(getValue('r', msg).toFloat()), 0, 255);
+            break;
+          case 'g':
+            g = constrain(int(getValue('g', msg).toFloat()), 0, 255);
+            break;
+          case 'b':
+            b = constrain(int(getValue('b', msg).toFloat()), 0, 255);
+            break;
+          case 'x':
+            x = constrain((int((getValue('x', msg).toFloat() + 240) / 480 * 8)), 0, 7);
+            break;
+          case 'y':
+            y = constrain((int((getValue('y', msg).toFloat() + 180) / 360 * 8)), 0, 7);
+            break;
+          case 'i':
+            led_int = constrain(int(getValue('i', msg).toFloat()), 0, 7);
+            break;
         }
-        if (DEBUG_SERIAL) Serial.println("{RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")}");
-        Serial.println("{(x,y),i:(" + String(x) + ", " + String(y) + "), " + String(led_int) + ")}");
-      } else {
-        if (DEBUG_SERIAL) Serial.println("NOP");
+        if (DEBUG_SERIAL) Serial.println("{{msg:" + msg + "}}");
+
+        // Skip var_value
+        while (msg.charAt(0) != ' ' && msg.length() > 0) {
+          msg = msg.substring(1);
+        }
+        if (DEBUG_SERIAL) Serial.println("{{msg2:" + msg + "}}");
       }
-      len = msg.length();
+
+      // RGB LED
+      pixels.setPixelColor(0, pixels.Color(r, g, b));
+      pixels.show();
+
+      // 8x8 Matrix LED
+      mled.intensity = led_int;
+      mled.dot(old_x, old_y, 0);
+      mled.dot(x, y);
+      mled.display();
+      old_x = x;
+      old_y = y;
+
+      if (DEBUG_SERIAL) Serial.println("{RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")}");
+      if (DEBUG_SERIAL) Serial.println("{(x,y),i:(" + String(x) + ", " + String(y) + "), " + String(led_int) + ")}");
+    } else {
+      if (DEBUG_SERIAL) Serial.println("NOP");
     }
-
-    // RGB LED
-    pixels.setPixelColor(0, pixels.Color(r, g, b));
-    pixels.show();
-
-    // 8x8 Matrix LED
-    mled.intensity = led_int;
-    mled.dot(old_x, old_y, 0);
-    mled.dot(x, y);
-    mled.display();
-    old_x = x;
-    old_y = y;
-
-    // send broadcast message
-    if (digitalRead(BUTTONPIN) == LOW) {
-      broadcast("btn");
-    }
-
-    sensor_update("v", String(value));
-    sensor_update("rand", String(random(255)));
-
-    // Get DHT data
-    t = NAN;
-    h = NAN;
-    while ( isnan(t) || isnan(h) ) {
-      t = dht.readTemperature();
-      h = dht.readHumidity();
-    }
-
-    if ( t != t_old ) {
-      sensor_update("t", String(t));
-    }
-
-    if ( h != h_old ) {
-      sensor_update("h", String(h));
-    }
-
-    // Store current h & t
-    h_old = h;
-    t_old = t;
+    len = msg.length();
   }
+
+  // send broadcast message
+  if (digitalRead(BUTTONPIN) == LOW) {
+    broadcast("btn");
+  }
+
+  sensor_update("v", String(value));
+  sensor_update("rand", String(random(255)));
+
+  // Get DHT data
+  t = NAN;
+  h = NAN;
+  while ( isnan(t) || isnan(h) ) {
+    t = dht.readTemperature();
+    h = dht.readHumidity();
+  }
+
+  if ( t != t_old ) {
+    sensor_update("t", String(t));
+  }
+
+  if ( h != h_old ) {
+    sensor_update("h", String(h));
+  }
+
+  // Store current h & t
+  h_old = h;
+  t_old = t;
 }
