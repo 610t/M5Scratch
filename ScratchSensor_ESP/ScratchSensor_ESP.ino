@@ -105,6 +105,10 @@ MLED mled(0);
 #include <BH1750.h>
 BH1750 lightMeter;
 
+// Barometric Pressure (HP303B)
+#include <LOLIN_HP303B.h>
+LOLIN_HP303B HP303B;
+
 const int Port = 42001;
 
 int r = 0, g = 0, b = 0;
@@ -151,6 +155,9 @@ void setup() {
 
   // Initialize Ambient Light (BH1750)
   lightMeter.begin();
+
+  // Initialize Barometric Pressure (HP303B)
+  HP303B.begin();
 }
 
 String getValue(char name, String msg) {
@@ -298,11 +305,25 @@ void loop() {
       sensor_update("lux", String(lightMeter.readLightLevel()));
 
       // Get DHT data
-      sensor_update("t", String(dht.readTemperature()));
-      sensor_update("h", String(dht.readHumidity()));
+      sensor_update("temp", String(dht.readTemperature()));
+      sensor_update("hum", String(dht.readHumidity()));
 
-      sensor_update("v", String(value));
+      sensor_update("value", String(value));
       sensor_update("rand", String(random(255)));
+
+      // Barometric Pressure (HP303B)
+      int32_t temperature;
+      int32_t pressure;
+      int16_t ret;
+
+      ret = HP303B.measureTempOnce(temperature);
+      if (ret == 0) {
+        sensor_update("temp2", String(temperature));
+      }
+      ret = HP303B.measurePressureOnce(pressure);
+      if (ret == 0) {
+        sensor_update("pressure", String(pressure));
+      }
     } else {
       if (DEBUG_SERIAL) Serial.println("NOP");
     }
