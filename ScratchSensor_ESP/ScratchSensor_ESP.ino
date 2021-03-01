@@ -200,7 +200,6 @@ int value = 0;
 
 void loop() {
   uint8_t buffer[128] = {0};
-  float t, h;
 
   ++value;
   // Blink Builtin LED
@@ -296,14 +295,11 @@ void loop() {
       if (DEBUG_SERIAL) Serial.println("{(x,y),i:(" + String(x) + ", " + String(y) + "), " + String(led_int) + ")}");
 
       // Ambient light
-      float lux = lightMeter.readLightLevel();
-      sensor_update("lux", String(lux));
+      sensor_update("lux", String(lightMeter.readLightLevel()));
 
       // Get DHT data
-      t = dht.readTemperature();
-      h = dht.readHumidity();
-      sensor_update("t", String(t));
-      sensor_update("h", String(h));
+      sensor_update("t", String(dht.readTemperature()));
+      sensor_update("h", String(dht.readHumidity()));
 
       sensor_update("v", String(value));
       sensor_update("rand", String(random(255)));
