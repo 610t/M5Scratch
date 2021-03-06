@@ -145,6 +145,9 @@ void setup() {
   // Init M5
 #if defined(ARDUINO_M5Stack_ATOM)
   M5.begin(true, false, true);
+#elif defined(ARDUINO_M5STACK_TOUGH)
+  M5.begin(true, true, true, true);
+  // while (M5.touch.calibrationTouch(&M5.Lcd));
 #else
   M5.begin();
 #endif
