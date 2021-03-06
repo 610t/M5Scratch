@@ -82,6 +82,8 @@ MPU9250 Imu;
 #elif defined(ARDUINO_M5STACK_TOUGH)
 #include <M5Tough.h>
 #define ROTATION 1
+// Temporary hack for LCD with LovyanGFX
+#define LGFX_M5STACK_CORE2
 #elif defined(ARDUINO_M5STACK_Core2)
 #include <M5Core2.h>
 #define ROTATION 1
