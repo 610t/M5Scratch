@@ -64,14 +64,15 @@ const int Port = 42001;
 #include <M5StickCPlus.h>
 #define ROTATION 0
 #elif defined(ARDUINO_M5Stack_Core_ESP32)
-// #define M5STACK_MPU6886
-#define M5STACK_MPU9250
+#define M5STACK_MPU6886
+// #define M5STACK_MPU9250
 // #define M5STACK_MPU6050
 // #define M5STACK_200Q
 
 #include <M5Stack.h>
 #include <M5StackUpdater.h>
 #define ROTATION 1
+#define Imu IMU
 
 #if defined(M5STACK_MPU9250)
 #include "utility/MPU9250.h"
