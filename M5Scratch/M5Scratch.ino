@@ -667,11 +667,11 @@ void loop() {
   // send sensor-update
 
   // sensor-update accel
-#if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
+#if defined(ARDUINO_M5Stick_C)
   // Rotation is different from landscape.
   sensor_update("ax", String(-1 * 240 * ay));
   sensor_update("ay", String(+1 * 180 * ax));
-#elif defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_Core2)
+#elif defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_Core2) || defined(ARDUINO_M5Stick_C_Plus)
   sensor_update("ax", String(-1 * 240 * ax));
   sensor_update("ay", String(-1 * 180 * ay));
 #elif defined(ARDUINO_M5Stack_ATOM)
