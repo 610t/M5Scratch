@@ -63,6 +63,7 @@ const int Port = 42001;
 #elif defined(ARDUINO_M5Stick_C_Plus)
 #include <M5StickCPlus.h>
 #define ROTATION 0
+#define LGFX_M5STICK_C
 #elif defined(ARDUINO_M5Stack_Core_ESP32)
 #define M5STACK_MPU6886
 // #define M5STACK_MPU9250
