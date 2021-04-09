@@ -330,6 +330,30 @@ void broadcast(String msg) {
   }
 }
 
+String scmd = "";
+
+void init_sensor_update() {
+  scmd = "";
+}
+
+void add_sensor_update(String varName, String varValue) {
+  String cmd = "\"" + varName + "\" " + varValue + " ";
+
+  scmd = scmd + cmd;
+}
+
+void send_sensor_update() {
+  String cmd = "sensor-update " + scmd;
+  char buf[1024] = {0};
+  char sc[1024] = {0};
+
+  if (DEBUG_SERIAL) Serial.println("String:" + cmd);
+  cmd.toCharArray(buf, cmd.length() + 1);
+  sprintf(sc + 4, buf);
+  sc[3] = (uint8_t)strlen(sc + 4);
+  client.write((const uint8_t*)sc, 4 + strlen(sc + 4));
+}
+
 void sensor_update(String varName, String varValue) {
   char scmd[32] = {0};
   char buf[100] = {0};
@@ -339,13 +363,7 @@ void sensor_update(String varName, String varValue) {
   sprintf(scmd + 4, buf);
   scmd[3] = (uint8_t)strlen(scmd + 4);
   client.setTimeout(100);
-  if (client.write((const uint8_t*)scmd, 4 + strlen(scmd + 4))) {
-    if (DEBUG_SERIAL) Serial.println("sensor-update ok");
-    return;
-  } else {
-    if (DEBUG_SERIAL) Serial.println("sensor-update err");
-    return;
-  }
+  client.write((const uint8_t*)scmd, 4 + strlen(scmd + 4));
 }
 
 void loop() {
@@ -684,31 +702,31 @@ void loop() {
 #endif
 
   // send sensor-update
-
+  init_sensor_update();
   // sensor-update accel
 #if defined(ARDUINO_M5Stick_C)
   // Rotation is different from landscape.
-  sensor_update("ax", String(-1 * 240 * ay));
-  sensor_update("ay", String(+1 * 180 * ax));
+  add_sensor_update("ax", String(-1 * 240 * ay));
+  add_sensor_update("ay", String(+1 * 180 * ax));
 #elif defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_Core2) || defined(ARDUINO_M5Stick_C_Plus)
-  sensor_update("ax", String(-1 * 240 * ax));
-  sensor_update("ay", String(-1 * 180 * ay));
+  add_sensor_update("ax", String(-1 * 240 * ax));
+  add_sensor_update("ay", String(-1 * 180 * ay));
 #elif defined(ARDUINO_M5Stack_ATOM)
-  sensor_update("ax", String(+1 * 240 * ax));
-  sensor_update("ay", String(-1 * 180 * ay));
+  add_sensor_update("ax", String(+1 * 240 * ax));
+  add_sensor_update("ay", String(-1 * 180 * ay));
 #elif defined(ARDUINO_WIO_TERMINAL)
-  sensor_update("ax", String(-1 * 240 * ay));
-  sensor_update("ay", String(-1 * 180 * ax));
+  add_sensor_update("ax", String(-1 * 240 * ay));
+  add_sensor_update("ay", String(-1 * 180 * ax));
 #endif
-  sensor_update("az", String(1000 * az));
+  add_sensor_update("az", String(1000 * az));
 #if !defined(ARDUINO_M5Stack_ATOM) && !defined(M5SCRATCH_DEMO)
   lcd.println("accel:(" + String(ax) + ", " + String(ay) + ", " + String(az) + ")");
 #endif
 
   // sensor-update gyro
-  sensor_update("gx", String(gyroX));
-  sensor_update("gy", String(gyroY));
-  sensor_update("gz", String(gyroZ));
+  add_sensor_update("gx", String(gyroX));
+  add_sensor_update("gy", String(gyroY));
+  add_sensor_update("gz", String(gyroZ));
 #if !defined(ARDUINO_M5Stack_ATOM) && !defined(M5SCRATCH_DEMO)
   lcd.println("gyro:(" + String(gyroX) + ", " + String(gyroY) + ", " + String(gyroZ) + ")");
 #endif
@@ -716,15 +734,15 @@ void loop() {
 #if !defined(ARDUINO_M5STACK_TOUGH)
 #if defined(M5STACK_MPU9250)
   // sensor-update magnetic
-  sensor_update("mx", String(mx));
-  sensor_update("my", String(my));
-  sensor_update("mz", String(mz));
+  add_sensor_update("mx", String(mx));
+  add_sensor_update("my", String(my));
+  add_sensor_update("mz", String(mz));
 #if !defined(ARDUINO_M5Stack_ATOM) && !defined(M5SCRATCH_DEMO)
   lcd.println("mag:(" + String(mx) + ", " + String(my) + ", " + String(mz) + ")");
 #endif
 
   // sensor-update heading
-  sensor_update("heading", String(heading));
+  add_sensor_update("heading", String(heading));
 #if !defined(ARDUINO_M5Stack_ATOM) && !defined(M5SCRATCH_DEMO)
   lcd.println("heading:" + String(heading));
 #endif
@@ -732,9 +750,9 @@ void loop() {
 #endif
 
   // sensor-update pitch, roll, yaw
-  sensor_update("pitch", String(pitch));
-  sensor_update("roll", String(roll));
-  sensor_update("yaw", String(yaw));
+  add_sensor_update("pitch", String(pitch));
+  add_sensor_update("roll", String(roll));
+  add_sensor_update("yaw", String(yaw));
 #if !defined(ARDUINO_M5Stack_ATOM) && !defined(M5SCRATCH_DEMO)
   lcd.println("p,r,y:(" + String(pitch) + ", " + String(roll) + ", " + String(yaw) + ")");
 #endif
@@ -743,7 +761,9 @@ void loop() {
 #if !defined(ARDUINO_M5Stack_ATOM) && !defined(M5SCRATCH_DEMO)
   lcd.println("temp:" + String(temp));
 #endif
-  sensor_update("temp", String(temp));
+  add_sensor_update("temp", String(temp));
+  add_sensor_update("j", String(random(0, 255)));
+  send_sensor_update();
 
   client.stop();
 }
