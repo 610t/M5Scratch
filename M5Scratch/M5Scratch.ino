@@ -202,7 +202,7 @@ void setup() {
 #if !defined(ARDUINO_M5Stack_ATOM)
   lcd.setRotation(ROTATION);
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
-  lcd.setTextSize(1);
+  lcd.setTextSize(0.3);
 #elif defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_Core2)
   lcd.setTextSize(2);
 #endif
