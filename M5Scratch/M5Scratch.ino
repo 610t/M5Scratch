@@ -46,7 +46,7 @@
 #include "network.h"
 
 // Scratch Remote Sensor TCP/IP port
-const int Port = 42001;
+const int port = 42001;
 
 // Setting file for Scratch Host IP
 #define HOST_IP_FILE "/M5Scratch.txt"
@@ -54,7 +54,11 @@ const int Port = 42001;
 // M5Scratch moving cat demo mode
 #define M5SCRATCH_DEMO
 
+#if defined(ARDUINO_WIO_TERMINAL)
+#include "rpcWiFi.h"
+#else
 #include <WiFi.h>
+#endif
 #include <Wire.h>
 
 #if defined(ARDUINO_M5Stick_C)
@@ -106,6 +110,11 @@ void setBuff(uint8_t Rdata, uint8_t Gdata, uint8_t Bdata)
     DisBuff[2 + i * 3 + 2] = Bdata;
   }
 }
+#elif defined(ARDUINO_WIO_TERMINAL)
+#include "LIS3DHTR.h"
+#include <SPI.h>
+LIS3DHTR<TwoWire> lis;
+#define ROTATION 1
 #endif
 
 #if defined(M5SCRATCH_DEMO)
@@ -133,7 +142,7 @@ static LGFX_Sprite icons;
 static int_fast16_t sprite_height;
 #endif
 
-#if !defined(ARDUINO_M5STACK_TOUGH) && !defined(ARDUINO_M5Stick_C_Plus)
+#if !defined(ARDUINO_M5STACK_TOUGH) && !defined(ARDUINO_M5Stick_C_Plus) && !defined(ARDUINO_WIO_TERMINAL)
 #include "utility/MahonyAHRS.h"
 #endif
 
@@ -152,7 +161,7 @@ void setup() {
 #elif defined(ARDUINO_M5STACK_TOUGH)
   M5.begin(true, true, true, true);
   // while (M5.touch.calibrationTouch(&M5.Lcd));
-#else
+#elif !defined(ARDUINO_WIO_TERMINAL)
   M5.begin();
 #endif
   delay(100);
@@ -240,7 +249,12 @@ void setup() {
   digitalWrite(5, HIGH);
 
   // Accel & gyro (& mag for M5Stack)
-#if !defined(ARDUINO_M5STACK_TOUGH)
+#if defined(ARDUINO_WIO_TERMINAL)
+  lis.begin(Wire1);
+  delay(100);
+  lis.setOutputDataRate(LIS3DHTR_DATARATE_50HZ);
+  lis.openTemp();
+#elif !defined(ARDUINO_M5STACK_TOUGH)
 #if !defined(M5STACK_MPU9250)
   M5.Imu.Init();
 #else
@@ -349,10 +363,12 @@ void loop() {
     circle_r = lcd_height / 12;
   }
 
+#if !defined(ARDUINO_WIO_TERMINAL)
   M5.update();
+#endif
 
   if (DEBUG_SERIAL) Serial.println("Before client connect");
-  while (!client.connect(host, Port)) {
+  while (!client.connect(host, port)) {
     Serial.println("Scratch Host IP is {" + String(host) + "}");
     Serial.println("connection failed");
   }
@@ -363,7 +379,7 @@ void loop() {
     client.stop();
     Serial.println("Before client.connect");
     //client.setTimeout(100);
-    client.connect(host, Port);
+    client.connect(host, port);
     Serial.println("After client.connect");
   }
   if (DEBUG_SERIAL) Serial.println("Client connected");
@@ -615,7 +631,10 @@ void loop() {
   float temp = 0;
 
 #if !defined(ARDUINO_M5STACK_TOUGH)
-#if !defined(M5STACK_MPU9250)
+#if defined(ARDUINO_WIO_TERMINAL)
+  lis.getAcceleration(&ax, &ay, &az);
+  temp = lis.getTemperature();
+#elif !defined(M5STACK_MPU9250)
   M5.Imu.getAccelData(&ax, &ay, &az);         // get accel
   M5.Imu.getGyroAdc(&gyroX, &gyroY, &gyroZ);  // get gyro
   M5.Imu.getTempData(&temp);                  // get temp
@@ -658,7 +677,7 @@ void loop() {
   }
 #endif
 
-#if !defined(ARDUINO_M5Stick_C_Plus)
+#if !defined(ARDUINO_M5Stick_C_Plus) && !defined(ARDUINO_WIO_TERMINAL)
   // Calculate pitch, roll, yaw
   MahonyAHRSupdateIMU(gyroX, gyroY, gyroZ, ax, ay, az, &pitch, &roll, &yaw);
 #endif
@@ -677,6 +696,9 @@ void loop() {
 #elif defined(ARDUINO_M5Stack_ATOM)
   sensor_update("ax", String(+1 * 240 * ax));
   sensor_update("ay", String(-1 * 180 * ay));
+#elif defined(ARDUINO_WIO_TERMINAL)
+  sensor_update("ax", String(-1 * 240 * ay));
+  sensor_update("ay", String(-1 * 180 * ax));
 #endif
   sensor_update("az", String(1000 * az));
 #if !defined(ARDUINO_M5Stack_ATOM) && !defined(M5SCRATCH_DEMO)
