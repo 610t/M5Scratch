@@ -272,6 +272,8 @@ void setup() {
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
   pinMode(M5_LED, OUTPUT);
   digitalWrite(M5_LED, LOW);
+#elif defined(ARDUINO_WIO_TERMINAL)
+  pinMode(LED_BUILTIN, OUTPUT);
 #endif
 
   // Button
@@ -481,6 +483,8 @@ void loop() {
           led =  int(getValue('l', msg).toFloat());
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
           digitalWrite(M5_LED, led);
+#elif defined(ARDUINO_WIO_TERMINAL)
+          digitalWrite(LED_BUILTIN, led);
 #endif
         } else if (msg.startsWith("x") == true) {
           // Cat x axis location
