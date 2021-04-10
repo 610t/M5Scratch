@@ -279,11 +279,16 @@ void setup() {
   pinMode(M5_BUTTON_HOME, INPUT);
   pinMode(M5_BUTTON_RST, INPUT);
 #elif defined(ARDUINO_WIO_TERMINAL)
+  // 5 way switch
   pinMode(WIO_5S_UP, INPUT_PULLUP);
   pinMode(WIO_5S_DOWN, INPUT_PULLUP);
   pinMode(WIO_5S_LEFT, INPUT_PULLUP);
   pinMode(WIO_5S_RIGHT, INPUT_PULLUP);
   pinMode(WIO_5S_PRESS, INPUT_PULLUP);
+  // 3 Configurable Button
+  pinMode(WIO_KEY_A, INPUT_PULLUP);
+  pinMode(WIO_KEY_B, INPUT_PULLUP);
+  pinMode(WIO_KEY_C, INPUT_PULLUP);
 #endif
 
 #if defined(ARDUINO_M5Stack_Core_ESP3)
@@ -614,11 +619,16 @@ void loop() {
     broadcast("BtnA");
   }
 #elif defined(ARDUINO_WIO_TERMINAL)
+  // 5way switch
   if (digitalRead(WIO_5S_UP) == LOW) broadcast("BtnUp");
   if (digitalRead(WIO_5S_DOWN) == LOW) broadcast("BtnDown");
   if (digitalRead(WIO_5S_LEFT) == LOW) broadcast("BtnLeft");
   if (digitalRead(WIO_5S_RIGHT) == LOW) broadcast("BtnRight");
   if (digitalRead(WIO_5S_PRESS) == LOW) broadcast("BtnPress");
+  // 3 Configurable Button
+  if (digitalRead(WIO_KEY_A) == LOW) broadcast("BtnA");
+  if (digitalRead(WIO_KEY_B) == LOW) broadcast("BtnB");
+  if (digitalRead(WIO_KEY_C) == LOW) broadcast("BtnC");
 #endif
 
 #if defined(ARDUINO_M5Stack_Core_ESP32)
