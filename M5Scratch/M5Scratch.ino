@@ -315,9 +315,11 @@ void setup() {
   Serial.println("Scratch Host IP is {" + String(host) + "}");
   lcd.println("Scratch Host IP is " + String(host));
 
-  // Light sensor
 #if defined(ARDUINO_WIO_TERMINAL)
+  // Light sensor
   pinMode(WIO_LIGHT, INPUT);
+  // microphone
+  pinMode(WIO_MIC, INPUT);
 #endif
 
   delay(1000);
@@ -798,6 +800,9 @@ void loop() {
   // Light sensor
   int light = analogRead(WIO_LIGHT);
   add_sensor_update("light", String(light));
+  // microphone
+  int mic = analogRead(WIO_MIC);
+  add_sensor_update("sound", String(mic));
 #endif
 
   add_sensor_update("j", String(random(0, 255)));
