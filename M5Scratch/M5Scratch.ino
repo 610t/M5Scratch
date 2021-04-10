@@ -315,6 +315,11 @@ void setup() {
   Serial.println("Scratch Host IP is {" + String(host) + "}");
   lcd.println("Scratch Host IP is " + String(host));
 
+  // Light sensor
+#if defined(ARDUINO_WIO_TERMINAL)
+  pinMode(WIO_LIGHT, INPUT);
+#endif
+
   delay(1000);
 }
 
@@ -788,6 +793,13 @@ void loop() {
   lcd.println("temp:" + String(temp));
 #endif
   add_sensor_update("temp", String(temp));
+
+#if defined(ARDUINO_WIO_TERMINAL)
+  // Light sensor
+  int light = analogRead(WIO_LIGHT);
+  add_sensor_update("light", String(light));
+#endif
+
   add_sensor_update("j", String(random(0, 255)));
   send_sensor_update();
 
