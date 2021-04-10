@@ -278,6 +278,12 @@ void setup() {
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
   pinMode(M5_BUTTON_HOME, INPUT);
   pinMode(M5_BUTTON_RST, INPUT);
+#elif defined(ARDUINO_WIO_TERMINAL)
+  pinMode(WIO_5S_UP, INPUT_PULLUP);
+  pinMode(WIO_5S_DOWN, INPUT_PULLUP);
+  pinMode(WIO_5S_LEFT, INPUT_PULLUP);
+  pinMode(WIO_5S_RIGHT, INPUT_PULLUP);
+  pinMode(WIO_5S_PRESS, INPUT_PULLUP);
 #endif
 
 #if defined(ARDUINO_M5Stack_Core_ESP3)
@@ -607,6 +613,12 @@ void loop() {
   {
     broadcast("BtnA");
   }
+#elif defined(ARDUINO_WIO_TERMINAL)
+  if (digitalRead(WIO_5S_UP) == LOW) broadcast("BtnUp");
+  if (digitalRead(WIO_5S_DOWN) == LOW) broadcast("BtnDown");
+  if (digitalRead(WIO_5S_LEFT) == LOW) broadcast("BtnLeft");
+  if (digitalRead(WIO_5S_RIGHT) == LOW) broadcast("BtnRight");
+  if (digitalRead(WIO_5S_PRESS) == LOW) broadcast("BtnPress");
 #endif
 
 #if defined(ARDUINO_M5Stack_Core_ESP32)
