@@ -54,6 +54,9 @@ const int port = 42001;
 // M5Scratch moving cat demo mode
 #define M5SCRATCH_DEMO
 
+// Rotation of display
+int rotation=0;
+
 #if defined(ARDUINO_WIO_TERMINAL)
 #include "rpcWiFi.h"
 #else
@@ -63,10 +66,8 @@ const int port = 42001;
 
 #if defined(ARDUINO_M5Stick_C)
 #include <M5StickC.h>
-#define ROTATION 0
 #elif defined(ARDUINO_M5Stick_C_Plus)
 #include <M5StickCPlus.h>
-#define ROTATION 0
 #define LGFX_M5STICK_C
 #elif defined(ARDUINO_M5Stack_Core_ESP32)
 #define M5STACK_MPU6886
@@ -76,7 +77,7 @@ const int port = 42001;
 
 #include <M5Stack.h>
 #include <M5StackUpdater.h>
-#define ROTATION 1
+rotation=1;
 #define Imu IMU
 
 #if defined(M5STACK_MPU9250)
@@ -87,12 +88,12 @@ MPU9250 Imu;
 #define FACES_KEYBOARD_I2C_ADDR 0x08
 #elif defined(ARDUINO_M5STACK_TOUGH)
 #include <M5Tough.h>
-#define ROTATION 1
+rotation=1;
 // Temporary hack for LCD with LovyanGFX
 #define LGFX_M5STACK_CORE2
 #elif defined(ARDUINO_M5STACK_Core2)
 #include <M5Core2.h>
-#define ROTATION 1
+rotation=1;
 #define Imu IMU
 #elif defined(ARDUINO_M5Stack_ATOM)
 #include <M5Atom.h>
@@ -114,7 +115,7 @@ void setBuff(uint8_t Rdata, uint8_t Gdata, uint8_t Bdata)
 #include "LIS3DHTR.h"
 #include <SPI.h>
 LIS3DHTR<TwoWire> lis;
-#define ROTATION 1
+rotation=1;
 #endif
 
 #if defined(M5SCRATCH_DEMO)
@@ -209,7 +210,7 @@ void setup() {
   lcd.setAddrWindow(0, 0, lcd_width, lcd_height);
 #endif
 #if !defined(ARDUINO_M5Stack_ATOM)
-  lcd.setRotation(ROTATION);
+  lcd.setRotation(rotation);
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
   lcd.setTextSize(0.3);
 #elif defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_Core2)
@@ -395,9 +396,9 @@ void loop() {
   char* str;
 
   // Set circle radius
-  if (ROTATION == 1 || ROTATION == 3) {
+  if (rotation == 1 || rotation == 3) {
     circle_r = lcd_width / 12;
-  } else if (ROTATION == 0 || ROTATION == 2) {
+  } else if (rotation == 0 || rotation == 2) {
     circle_r = lcd_height / 12;
   }
 
