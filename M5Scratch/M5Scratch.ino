@@ -608,27 +608,14 @@ void loop() {
 
   // broadcast by button
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
-  if (digitalRead(M5_BUTTON_HOME) == LOW) {
-    broadcast("BtnA");
-  }
-  if (digitalRead(M5_BUTTON_RST) == LOW) {
-    broadcast("BtnB");
-  }
+  if (digitalRead(M5_BUTTON_HOME) == LOW) broadcast("BtnA");
+  if (digitalRead(M5_BUTTON_RST) == LOW) broadcast("BtnB");
 #elif defined(ARDUINO_M5Stack_Core_ESP32)
-  if (M5.BtnA.isPressed()) {
-    broadcast("BtnA");
-  }
-  if (M5.BtnB.isPressed()) {
-    broadcast("BtnB");
-  }
-  if (M5.BtnC.isPressed()) {
-    broadcast("BtnC");
-  }
+  if (M5.BtnA.isPressed()) broadcast("BtnA");
+  if (M5.BtnB.isPressed()) broadcast("BtnB");
+  if (M5.BtnC.isPressed()) broadcast("BtnC");
 #elif defined(ARDUINO_M5Stack_ATOM)
-  if (M5.Btn.wasPressed())
-  {
-    broadcast("BtnA");
-  }
+  if (M5.Btn.wasPressed()) broadcast("BtnA");
 #elif defined(ARDUINO_WIO_TERMINAL)
   // 5way switch
   if (digitalRead(WIO_5S_UP) == LOW) broadcast("BtnUp");
