@@ -55,7 +55,7 @@ const int port = 42001;
 #define M5SCRATCH_DEMO
 
 // Rotation of display
-int rotation=0;
+int rotation = 0;
 
 #if defined(ARDUINO_WIO_TERMINAL)
 #include "rpcWiFi.h"
@@ -77,7 +77,7 @@ int rotation=0;
 
 #include <M5Stack.h>
 #include <M5StackUpdater.h>
-rotation=1;
+rotation = 1;
 #define Imu IMU
 
 #if defined(M5STACK_MPU9250)
@@ -88,12 +88,12 @@ MPU9250 Imu;
 #define FACES_KEYBOARD_I2C_ADDR 0x08
 #elif defined(ARDUINO_M5STACK_TOUGH)
 #include <M5Tough.h>
-rotation=1;
+rotation = 1;
 // Temporary hack for LCD with LovyanGFX
 #define LGFX_M5STACK_CORE2
 #elif defined(ARDUINO_M5STACK_Core2)
 #include <M5Core2.h>
-rotation=1;
+rotation = 1;
 #define Imu IMU
 #elif defined(ARDUINO_M5Stack_ATOM)
 #include <M5Atom.h>
@@ -115,7 +115,7 @@ void setBuff(uint8_t Rdata, uint8_t Gdata, uint8_t Bdata)
 #include "LIS3DHTR.h"
 #include <SPI.h>
 LIS3DHTR<TwoWire> lis;
-rotation=1;
+rotation = 1;
 #endif
 
 #if defined(M5SCRATCH_DEMO)
@@ -130,6 +130,7 @@ static uint32_t sec, psec;
 static size_t fps = 0, frame_count = 0;
 static uint32_t lcd_width ;
 static uint32_t lcd_height;
+static uint32_t circle_r;
 
 int_fast16_t x;
 int_fast16_t y;
@@ -181,6 +182,13 @@ void setup() {
 
   lcd_width = lcd.width();
   lcd_height = lcd.height();
+
+  // Set circle radius
+  if (rotation == 1 || rotation == 3) {
+    circle_r = lcd_width / 12;
+  } else if (rotation == 0 || rotation == 2) {
+    circle_r = lcd_height / 12;
+  }
 
   uint32_t div = 2;
   for (;;) {
@@ -391,16 +399,8 @@ void loop() {
   uint8_t buffer[128] = {0};
   int r = 0, g = 0, b = 0, led = 0;
   uint16_t rgb, old_rgb;
-  int circle_r;
   String s;
   char* str;
-
-  // Set circle radius
-  if (rotation == 1 || rotation == 3) {
-    circle_r = lcd_width / 12;
-  } else if (rotation == 0 || rotation == 2) {
-    circle_r = lcd_height / 12;
-  }
 
 #if !defined(ARDUINO_WIO_TERMINAL)
   M5.update();
@@ -560,7 +560,7 @@ void loop() {
         psec = sec;
         fps = frame_count;
         frame_count = 0;
-        lcd.setAddrWindow(0, 0, lcd.width(), lcd.height());
+        lcd.setAddrWindow(0, 0, lcd_width, lcd_height);
       }
 #endif
 
