@@ -77,7 +77,6 @@ int rotation = 0;
 
 #include <M5Stack.h>
 #include <M5StackUpdater.h>
-rotation = 1;
 #define Imu IMU
 
 #if defined(M5STACK_MPU9250)
@@ -88,12 +87,10 @@ MPU9250 Imu;
 #define FACES_KEYBOARD_I2C_ADDR 0x08
 #elif defined(ARDUINO_M5STACK_TOUGH)
 #include <M5Tough.h>
-rotation = 1;
 // Temporary hack for LCD with LovyanGFX
 #define LGFX_M5STACK_CORE2
 #elif defined(ARDUINO_M5STACK_Core2)
 #include <M5Core2.h>
-rotation = 1;
 #define Imu IMU
 #elif defined(ARDUINO_M5Stack_ATOM)
 #include <M5Atom.h>
@@ -115,7 +112,6 @@ void setBuff(uint8_t Rdata, uint8_t Gdata, uint8_t Bdata)
 #include "LIS3DHTR.h"
 #include <SPI.h>
 LIS3DHTR<TwoWire> lis;
-rotation = 1;
 #endif
 
 #if defined(M5SCRATCH_DEMO)
@@ -182,6 +178,11 @@ void setup() {
 
   lcd_width = lcd.width();
   lcd_height = lcd.height();
+
+  // Rotation of display
+#if defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_TOUGH) || defined(ARDUINO_M5STACK_Core2) || defined(ARDUINO_WIO_TERMINAL)
+  rotation = 1;
+#endif
 
   // Set circle radius
   if (rotation == 1 || rotation == 3) {
