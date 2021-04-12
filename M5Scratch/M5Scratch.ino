@@ -57,7 +57,7 @@
 const int port = 42001;
 
 // Setting file for Scratch Host IP
-#define HOST_IP_FILE "/M5Scratch.txt"
+const char* host_ip_file = "/M5Scratch.txt";
 
 // M5Scratch moving cat demo mode
 #define M5SCRATCH_DEMO
@@ -171,6 +171,27 @@ void setup() {
   M5.begin();
 #endif
   delay(100);
+
+#if defined(ARDUINO_M5Stack_Core_ESP32)
+  // Scratch Host IP setting use /m5s.txt at SD.
+  Serial.println("Open file :" + String(host_ip_file));
+  File f = SD.open(host_ip_file);
+  if (f) {
+    host = "";
+    Serial.println("File " + String(host_ip_file) + " open successfully.");
+    while (f.available()) {
+      char chr = f.read();
+      ip = ip + chr;
+    }
+    f.close();
+  } else {
+    Serial.println("File open error " + String(host_ip_file));
+  }
+  ip.trim();
+  if (ip.length() > 0) {
+    host = const_cast<char*>(ip.c_str());
+  }
+#endif
 
 #if defined(ARDUINO_M5Stack_Core_ESP32)
   // for LovyanLauncher
@@ -311,25 +332,6 @@ void setup() {
   pinMode(WIO_KEY_C, INPUT_PULLUP);
 #endif
 
-#if defined(ARDUINO_M5Stack_Core_ESP3)
-  // Scratch Host IP setting use /M5Scratch.txt at SD.
-  File f = SD.open(HOST_IP_FILE);
-  if (f) {
-    host = "";
-    Serial.println("File "HOST_IP_FILE" open successfully.");
-    while (f.available()) {
-      char chr = f.read();
-      ip = ip + chr;
-    }
-    f.close();
-  } else {
-    Serial.println("File open error "HOST_IP_FILE);
-  }
-  ip.trim();
-  if (ip.length() != 0) {
-    host = const_cast<char*>(ip.c_str());
-  }
-#endif
   Serial.println("Scratch Host IP is {" + String(host) + "}");
   lcd.println("Scratch Host IP is " + String(host));
 
