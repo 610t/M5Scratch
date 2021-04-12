@@ -117,9 +117,14 @@ void setBuff(uint8_t Rdata, uint8_t Gdata, uint8_t Bdata)
   }
 }
 #elif defined(ARDUINO_WIO_TERMINAL)
+// For IMU
 #include "LIS3DHTR.h"
 #include <SPI.h>
 LIS3DHTR<TwoWire> lis;
+// For SD
+#include <SPI.h>
+#include <Seeed_FS.h>
+#include "SD/Seeed_SD.h"
 #endif
 
 #if defined(M5SCRATCH_DEMO)
@@ -172,7 +177,14 @@ void setup() {
 #endif
   delay(100);
 
-#if defined(ARDUINO_M5Stack_Core_ESP32)
+#if defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_WIO_TERMINAL)
+#if defined(ARDUINO_WIO_TERMINAL)
+  if (SD.begin(SDCARD_SS_PIN, SDCARD_SPI)) {
+    Serial.println("Open SD OK.");
+  } else {
+    Serial.println("Open SD NG.");
+  }
+#endif
   // Scratch Host IP setting use /m5s.txt at SD.
   Serial.println("Open file :" + String(host_ip_file));
   File f = SD.open(host_ip_file);
