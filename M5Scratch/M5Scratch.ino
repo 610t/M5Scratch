@@ -164,6 +164,10 @@ void setup() {
   // Init Serial
   Serial.begin(115200);
   Serial.print("Searial start");
+  // wait for serial
+  while (!Serial) {
+    ;
+  }
   delay(10);
 
   // Init M5
