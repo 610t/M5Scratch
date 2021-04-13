@@ -181,7 +181,7 @@ void setup() {
 #endif
   delay(100);
 
-#if defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_WIO_TERMINAL)
+#if defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_Core2) || defined(ARDUINO_WIO_TERMINAL)
 #if defined(ARDUINO_WIO_TERMINAL)
   if (SD.begin(SDCARD_SS_PIN, SDCARD_SPI)) {
     Serial.println("Open SD OK.");
