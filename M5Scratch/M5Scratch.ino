@@ -101,6 +101,7 @@ MPU9250 Imu;
 #define Imu IMU
 #elif defined(ARDUINO_M5Stack_ATOM)
 #include <M5Atom.h>
+#define Imu IMU
 
 uint8_t DisBuff[2 + 5 * 5 * 3];
 
