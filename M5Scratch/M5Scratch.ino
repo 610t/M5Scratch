@@ -76,7 +76,6 @@ int rotation = 0;
 #include <M5StickC.h>
 #elif defined(ARDUINO_M5Stick_C_Plus)
 #include <M5StickCPlus.h>
-#define LGFX_M5STICK_C
 #elif defined(ARDUINO_M5Stack_Core_ESP32)
 #define M5STACK_MPU6886
 // #define M5STACK_MPU9250
