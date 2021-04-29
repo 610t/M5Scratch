@@ -332,10 +332,7 @@ void setup() {
 #endif
 
   // Button
-#if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
-  pinMode(M5_BUTTON_HOME, INPUT);
-  pinMode(M5_BUTTON_RST, INPUT);
-#elif defined(ARDUINO_WIO_TERMINAL)
+#if defined(ARDUINO_WIO_TERMINAL)
   // 5 way switch
   pinMode(WIO_5S_UP, INPUT_PULLUP);
   pinMode(WIO_5S_DOWN, INPUT_PULLUP);
@@ -635,13 +632,12 @@ void loop() {
   broadcast("test");
 
   // broadcast by button
-#if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
-  if (digitalRead(M5_BUTTON_HOME) == LOW) broadcast("BtnA");
-  if (digitalRead(M5_BUTTON_RST) == LOW) broadcast("BtnB");
-#elif defined(ARDUINO_M5Stack_Core_ESP32)
+#if defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
   if (M5.BtnA.isPressed()) broadcast("BtnA");
   if (M5.BtnB.isPressed()) broadcast("BtnB");
+#if defined(ARDUINO_M5Stack_Core_ESP32)
   if (M5.BtnC.isPressed()) broadcast("BtnC");
+#endif
 #elif defined(ARDUINO_M5Stack_ATOM)
   if (M5.Btn.wasPressed()) broadcast("BtnA");
 #elif defined(ARDUINO_WIO_TERMINAL)
