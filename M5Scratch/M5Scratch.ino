@@ -7,7 +7,7 @@
 */
 
 /*
-  Copyright 2016,2019-2020 Takeshi MUTOH
+  Copyright 2016,2019-2024 Takeshi MUTOH
 
   Redistribution and use in source and binary forms, with or without modification,
   are permitted provided that the following conditions are met:
@@ -45,101 +45,56 @@
 
 const int Port = 42001;
 
+#include <M5Unified.h>
+
 #include <WiFi.h>
 #include <Wire.h>
 
-#if defined(ARDUINO_M5Stick_C)
-#include <M5StickC.h>
-#elif defined(ARDUINO_M5Stack_Core_ESP32)
-// #define M5STACK_MPU6886
-#define M5STACK_MPU9250
-// #define M5STACK_MPU6050
-// #define M5STACK_200Q
-
-#include <M5Stack.h>
-#include <M5StackUpdater.h>
-
-#if defined(M5STACK_MPU9250)
-#include "utility/MPU9250.h"
-MPU9250 IMU;
-#endif
-
 #define FACES_KEYBOARD_I2C_ADDR 0x08
-#elif defined(ARDUINO_M5STACK_Core2)
-#include <M5Core2.h>
-#elif defined(ARDUINO_M5Stack_ATOM)
-#include <M5Atom.h>
 
-uint8_t DisBuff[2 + 5 * 5 * 3];
+// For M5Stack Atom's Matrix LED
+#include <FastLED.h>
+#define NUM_LEDS 25
+#define LED_DATA_PIN 27
 
-void setBuff(uint8_t Rdata, uint8_t Gdata, uint8_t Bdata)
-{
-  DisBuff[0] = 0x05;
-  DisBuff[1] = 0x05;
-  for (int i = 0; i < 25; i++)
-  {
-    DisBuff[2 + i * 3 + 0] = Rdata;
-    DisBuff[2 + i * 3 + 1] = Gdata;
-    DisBuff[2 + i * 3 + 2] = Bdata;
-  }
-}
-#endif
-
-#include "utility/MahonyAHRS.h"
-
-String r = "";
-WiFiClient client;
+//// Global variables
+m5::board_t myBoard = m5gfx::board_unknown;  // M5Stack board name
+CRGB leds[NUM_LEDS];                         // FastLED for M5Stack Atom
+String r = "";                               // String received
+WiFiClient client;                           // WiFi connect
 
 void setup() {
   // Init M5
-#if defined(ARDUINO_M5Stack_ATOM)
-  M5.begin(true, false, true);
-#else
-  M5.begin();
-#endif
-  delay(100);
+  auto cfg = M5.config();
+  M5.begin(cfg);
+  M5.Display.init();
 
-#if defined(ARDUINO_M5Stack_Core_ESP32)
-  // for LovyanLauncher
-  if (digitalRead(BUTTON_A_PIN) == 0) {
-    Serial.println("Will Load menu binary");
-    updateFromFS(SD);
-    ESP.restart();
+  // Init speaker.
+  auto spk_cfg = M5.Speaker.config();
+  M5.Speaker.config(spk_cfg);
+  M5.Speaker.begin();
+  myBoard = M5.getBoard();
+
+  // Init FastLED(NeoPixel).
+  if (myBoard == m5gfx::board_M5Atom) {
+    FastLED.addLeds<WS2811, LED_DATA_PIN, GRB>(leds, NUM_LEDS);
+    FastLED.setBrightness(20);
   }
-#endif
 
   // Init Serial
   Serial.begin(115200);
   delay(10);
 
-#if !defined(ARDUINO_M5Stack_ATOM)
-#if defined(ARDUINO_M5Stick_C)
-  M5.Lcd.setRotation(3);
-  M5.Lcd.setTextSize(1);
-#elif defined(ARDUINO_M5Stack_Core_ESP32)
-  M5.Lcd.setTextSize(2);
-#endif
   M5.Lcd.println("Welcome to Scratch Remoto Sensor!!");
-#endif
 
-#if defined(ARDUINO_M5Stack_ATOM)
-  setBuff(0x20, 0x20, 0x20);
-  M5.dis.displaybuff(DisBuff);
-
-  // for ATOM Lite
-  // M5.dis.drawpix(0, 0xffffff);
-#else
   M5.Lcd.println("WiFi connected.");
-#endif
   Serial.print("Connecting to ");
   Serial.println(ssid);
 
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-#if !defined(ARDUINO_M5Stack_ATOM)
     M5.Lcd.print(".");
-#endif
     Serial.print(".");
   }
 
@@ -150,50 +105,6 @@ void setup() {
   pinMode(5, INPUT);
   digitalWrite(5, HIGH);
 
-  // Accel & gyro (& mag for M5Stack)
-#if !defined(M5STACK_MPU9250)
-  M5.IMU.Init();
-#else
-  IMU.MPU9250SelfTest(IMU.SelfTest);
-
-  IMU.calibrateMPU9250(IMU.gyroBias, IMU.accelBias);
-  IMU.initMPU9250();
-
-  delay(500);
-  IMU.initAK8963(IMU.magCalibration);
-#endif
-
-  // LED
-#if defined(ARDUINO_M5Stick_C)
-  pinMode(M5_LED, OUTPUT);
-  digitalWrite(M5_LED, LOW);
-#endif
-
-  // Button
-#if defined(ARDUINO_M5Stick_C)
-  pinMode(M5_BUTTON_HOME, INPUT);
-  pinMode(M5_BUTTON_RST, INPUT);
-#endif
-
-#if defined(ARDUINO_M5Stack_Core_ESP3)
-  // Scratch Host IP setting use /M5Scratch.txt at SD.
-  File f = SD.open(HOST_IP_FILE);
-  if (f) {
-    host = "";
-    Serial.println("File "HOST_IP_FILE" open successfully.");
-    while (f.available()) {
-      char chr = f.read();
-      r = r + chr;
-    }
-    f.close();
-  } else {
-    Serial.println("File open error "HOST_IP_FILE);
-  }
-  r.trim();
-  if (r.length() != 0) {
-    host = const_cast<char*>(r.c_str());
-  }
-#endif
   Serial.println("Scratch Host IP is {" + String(host) + "}");
   delay(1000);
 }
@@ -205,8 +116,8 @@ String getValue(char name, String msg) {
 }
 
 void broadcast(String msg) {
-  char scmd[32] = {0};
-  char buf[100] = {0};
+  char scmd[32] = { 0 };
+  char buf[100] = { 0 };
   String cmd = "broadcast \"" + msg + "\"";
 
   cmd.toCharArray(buf, cmd.length() + 1);
@@ -224,8 +135,8 @@ void broadcast(String msg) {
 }
 
 void sensor_update(String varName, String varValue) {
-  char scmd[32] = {0};
-  char buf[100] = {0};
+  char scmd[32] = { 0 };
+  char buf[100] = { 0 };
   String cmd = "sensor-update \"" + varName + "\" " + varValue + " ";
 
   cmd.toCharArray(buf, cmd.length() + 1);
@@ -243,13 +154,12 @@ void sensor_update(String varName, String varValue) {
 }
 
 void loop() {
-  uint8_t buffer[128] = {0};
+  uint8_t buffer[128] = { 0 };
   int r = 0, g = 0, b = 0;
   String s;
   char* str;
 
   M5.update();
-  delay(10);
 
   Serial.println("Before client connect");
   while (!client.connect(host, Port)) {
@@ -271,7 +181,7 @@ void loop() {
   // Read all from server and print them to Serial.
   uint32_t len = 0;
   String msg = "";
-  char *c;
+  char* c;
 
   Serial.println("Let us go to read messages.");
 
@@ -287,9 +197,7 @@ void loop() {
   Serial.println("Get length:" + String(len));
 
   while (len > 0) {
-#if !defined(ARDUINO_M5Stack_ATOM)
     M5.Lcd.setCursor(0, 0);
-#endif
     Serial.print("Received:[");
     // Skip 4 byte message header and get string.
     for (uint32_t i = 4; i < len; i++) {
@@ -298,7 +206,7 @@ void loop() {
     }
     Serial.print("]\r\n");
 
-    while ((!msg.startsWith("broadcast") && !msg.startsWith("sensor-update")) && msg.length() > 0 ) {
+    while ((!msg.startsWith("broadcast") && !msg.startsWith("sensor-update")) && msg.length() > 0) {
       msg = msg.substring(1);
     }
 
@@ -307,9 +215,7 @@ void loop() {
       msg.replace("broadcast ", "");
       msg.replace("\"", "");
       Serial.println("broadcast:\"" + msg + "\"");
-#if !defined(ARDUINO_M5Stack_ATOM)
       M5.Lcd.println("broadcast:\"" + msg + "\"");
-#endif
     } else if (msg.startsWith("sensor-update")) {
       // value
       msg.replace("sensor-update ", "");
@@ -333,10 +239,8 @@ void loop() {
             s = getValue('s', msg);
             break;
           case 'l':
-            int led =  int(getValue('l', msg).toFloat());
-#if defined(ARDUINO_M5Stick_C)
-            digitalWrite(M5_LED, led);
-#endif
+            int led = int(getValue('l', msg).toFloat());
+            M5.Power.setLed(constrain(led, 0, 255));
             break;
         }
         //Serial.println("msg:\"" + msg + "\"");
@@ -350,35 +254,23 @@ void loop() {
 
       //// Output
       // RGB background
-#if defined(ARDUINO_M5Stack_ATOM)
-      // for ATOM Matrix
-      // Conver raw rgb(0-255) to led rgb(0-0x20)
-      int rl = constrain(int((r / 255.0) * 0x20), 0, 0x20);
-      int gl = constrain(int((g / 255.0) * 0x20), 0, 0x20);
-      int bl = constrain(int((b / 255.0) * 0x20), 0, 0x20);
-      Serial.println("LED RGB:(" + String(rl) + ", " + String(gl) + ", " + String(bl) + ")");
+      // Fill background (r,g,b) for ATOM Matrix
+      if (myBoard == m5gfx::board_M5Atom) {
+        for (int i = 0; i < NUM_LEDS; i++) {
+          leds[i] = CRGB(r, g, b);
+        }
+        FastLED.show();
+      }
 
-      setBuff(rl, gl, bl);
-      M5.dis.displaybuff(DisBuff);
-
-      // for ATOM Lite
-      // Conver raw rgb(0-255) to led rgb(0-0xf)
-      //rl = constrain(int((r / 255.0) * 0xf), 0, 0xf);
-      //gl = constrain(int((g / 255.0) * 0xf), 0, 0xf);
-      //bl = constrain(int((b / 255.0) * 0xf), 0, 0xf);
-      //M5.dis.drawpix(0, (((gl & 0xf) << 12) | ((rl & 0xf) << 8) | ((bl & 0xf) << 4)));
-#else
-      M5.Lcd.fillScreen(uint16_t (((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3) ));
+      // Fill background (r,g,b) for other boards.
+      M5.Lcd.fillScreen(uint16_t(((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3)));
 
       M5.Lcd.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
-#endif
       Serial.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
       // msg
       //M5.Lcd.setCursor(0, 100);
       //M5.Lcd.setTextSize(5);
-#if !defined(ARDUINO_M5Stack_ATOM)
       M5.Lcd.println("s:\"" + s + "\"");
-#endif
     } else {
       Serial.println("NOP");
     }
@@ -390,14 +282,6 @@ void loop() {
   broadcast("test");
 
   // broadcast by button
-#if defined(ARDUINO_M5Stick_C)
-  if (digitalRead(M5_BUTTON_HOME) == LOW) {
-    broadcast("BtnA");
-  }
-  if (digitalRead(M5_BUTTON_RST) == LOW) {
-    broadcast("BtnB");
-  }
-#elif defined(ARDUINO_M5Stack_Core_ESP32)
   if (M5.BtnA.isPressed()) {
     broadcast("BtnA");
   }
@@ -407,26 +291,18 @@ void loop() {
   if (M5.BtnC.isPressed()) {
     broadcast("BtnC");
   }
-#elif defined(ARDUINO_M5Stack_ATOM)
-  if (M5.Btn.wasPressed())
-  {
-    broadcast("Btn");
-  }
-#endif
 
-#if defined(ARDUINO_M5Stack_Core_ESP32)
-  // keyboard input
-  if (digitalRead(5) == LOW)
-  {
-    Wire.requestFrom(FACES_KEYBOARD_I2C_ADDR, 1);
-    while (Wire.available())
-    {
-      char c = Wire.read(); // receive a byte as character
-      Serial.print(c);         // print the character
-      broadcast("Key_" + String(c));
+  if (myBoard == m5gfx::board_M5Stack) {
+    // keyboard input
+    if (digitalRead(5) == LOW) {
+      Wire.requestFrom(FACES_KEYBOARD_I2C_ADDR, 1);
+      while (Wire.available()) {
+        char c = Wire.read();  // receive a byte as character
+        Serial.print(c);       // print the character
+        broadcast("Key_" + String(c));
+      }
     }
   }
-#endif
 
   // sensor-update
   sensor_update("v", String(random(0, 255)));
@@ -437,13 +313,9 @@ void loop() {
   float ay = 0;
   float az = 0;
 
-  int16_t gyroX = 0;
-  int16_t gyroY = 0;
-  int16_t gyroZ = 0;
-
-  float mx = 0;
-  float my = 0;
-  float mz = 0;
+  float gx = 0;
+  float gy = 0;
+  float gz = 0;
 
   float pitch = 0;
   float roll = 0;
@@ -453,110 +325,33 @@ void loop() {
 
   float temp = 0;
 
-#if !defined(M5STACK_MPU9250)
-  M5.IMU.getAccelData(&ax, &ay, &az);         // get accel
-  M5.IMU.getGyroAdc(&gyroX, &gyroY, &gyroZ);  // get gyro
-  M5.IMU.getTempData(&temp);                  // get temp
-#else
-  if (IMU.readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01)
-  {
-    // get accel
-    IMU.readAccelData(IMU.accelCount);  // Read the x/y/z adc values
-    IMU.getAres();
-    ax = (float)IMU.accelCount[0] * IMU.aRes; // - accelBias[0];
-    ay = (float)IMU.accelCount[1] * IMU.aRes; // - accelBias[1];
-    az = (float)IMU.accelCount[2] * IMU.aRes; // - accelBias[2];
+  M5.Imu.getAccel(&ax, &ay, &az);  // get accel
+  M5.Imu.getGyro(&gx, &gy, &gz);   // get gyro
+  M5.Imu.getTemp(&temp);           // get temperature
 
-    // get gyro
-    IMU.readGyroData(IMU.gyroCount);
-    IMU.getGres();
-
-    gyroX = (float)IMU.gyroCount[0] * IMU.gRes;
-    gyroY = (float)IMU.gyroCount[1] * IMU.gRes;
-    gyroZ = (float)IMU.gyroCount[2] * IMU.gRes;
-
-    // get magnetic
-    IMU.readMagData(IMU.magCount);
-    IMU.getMres();
-
-    mx = (float)IMU.magCount[0] * IMU.mRes * IMU.magCalibration[0] - 470;
-    my = (float)IMU.magCount[1] * IMU.mRes * IMU.magCalibration[1] - 120;
-    mz = (float)IMU.magCount[2] * IMU.mRes * IMU.magCalibration[2] - 125;
-
-    // get heading
-    float offset_mx = 1944.21;
-    float offset_my = 1204.83;
-    heading = atan2(my - offset_my, mx - offset_mx) * 180.0 / M_PI;
-
-    // get temp
-    IMU.tempCount = IMU.readTempData();
-    temp = ((float) IMU.tempCount) / 333.87 + 21.0;
-
-    IMU.updateTime();
-  }
-#endif
-
-  // Calculate pitch, roll, yaw
-  MahonyAHRSupdateIMU(gyroX, gyroY, gyroZ, ax, ay, az, &pitch, &roll, &yaw);
-
-  // send sensor-update
-
+  //// send sensor-update
   // sensor-update accel
-#if defined(ARDUINO_M5Stick_C)
-  // Rotation is different from landscape.
   sensor_update("ax", String(-1 * 240 * ay));
   sensor_update("ay", String(+1 * 180 * ax));
-#elif defined(ARDUINO_M5Stack_Core_ESP32)
-  sensor_update("ax", String(-1 * 240 * ax));
-  sensor_update("ay", String(-1 * 180 * ay));
-#elif defined(ARDUINO_M5Stack_ATOM)
-  sensor_update("ax", String(+1 * 240 * ax));
-  sensor_update("ay", String(-1 * 180 * ay));
-#endif
   sensor_update("az", String(1000 * az));
-#if !defined(ARDUINO_M5Stack_ATOM)
   M5.Lcd.println("accel:(" + String(ax) + ", " + String(ay) + ", " + String(az) + ")");
-#endif
 
   // sensor-update gyro
-  sensor_update("gx", String(gyroX));
-  sensor_update("gy", String(gyroY));
-  sensor_update("gz", String(gyroZ));
-#if !defined(ARDUINO_M5Stack_ATOM)
-  M5.Lcd.println("gyro:(" + String(gyroX) + ", " + String(gyroY) + ", " + String(gyroZ) + ")");
-#endif
-
-#if defined(M5STACK_MPU9250)
-  // sensor-update magnetic
-  sensor_update("mx", String(mx));
-  sensor_update("my", String(my));
-  sensor_update("mz", String(mz));
-#if !defined(ARDUINO_M5Stack_ATOM)
-  M5.Lcd.println("mag:(" + String(mx) + ", " + String(my) + ", " + String(mz) + ")");
-#endif
-
-  // sensor-update heading
-  sensor_update("heading", String(heading));
-#if !defined(ARDUINO_M5Stack_ATOM)
-  M5.Lcd.println("heading:" + String(heading));
-#endif
-#endif
+  sensor_update("gx", String(gx));
+  sensor_update("gy", String(gy));
+  sensor_update("gz", String(gz));
+  M5.Lcd.println("gyro:(" + String(gx) + ", " + String(gy) + ", " + String(gz) + ")");
 
   // sensor-update pitch, roll, yaw
   delay(100);
   sensor_update("pitch", String(pitch));
   sensor_update("roll", String(roll));
   sensor_update("yaw", String(yaw));
-#if !defined(ARDUINO_M5Stack_ATOM)
   M5.Lcd.println("p,r,y:(" + String(pitch) + ", " + String(roll) + ", " + String(yaw) + ")");
-#endif
 
   // sensor-update temp
-#if !defined(ARDUINO_M5Stack_ATOM)
   M5.Lcd.println("temp:" + String(temp));
-#endif
   sensor_update("temp", String(temp));
 
   client.stop();
-
 }
