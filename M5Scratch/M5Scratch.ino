@@ -104,13 +104,13 @@ void setup() {
   pinMode(5, INPUT);
   digitalWrite(5, HIGH);
 
-  log_i("Scratch Host IP is {" + String(host) + "}\n");
+  log_i("Scratch Host IP is {%s}\n", host);
   delay(1000);
 }
 
 String getValue(char name, String msg) {
   msg.replace(String(name) + " ", "");
-  log_i("str:\"" + String(name) + ":" + String(msg) + "\"\n");
+  log_i("str:\"%s:%s\"\n", name, msg);
   return msg;
 }
 
@@ -123,13 +123,13 @@ void broadcast(String msg) {
   strcpy(scmd + 4, buf);
   //scmd[3] = (uint8_t)strlen(scmd + 4);
   scmd[3] = cmd.length();
-  log_i(">pre broadcast:" + String(scmd + 4) + "\n");
+  log_i(">pre broadcast:%s\n", scmd + 4);
   client.setTimeout(100);
   //  if (client.write((const uint8_t*)scmd, 4 + strlen(scmd + 4))) {
   if (client.write((const uint8_t*)scmd, 4 + cmd.length())) {
-    log_i(">>broadcast:" + msg + " ok\n");
+    log_i(">>broadcast:%s ok\n", msg);
   } else {
-    log_i(">>broadcast:" + msg + " err\n");
+    log_i(">>broadcast:%s err\n", msg);
   }
 }
 
@@ -162,7 +162,7 @@ void loop() {
 
   log_i("Before client connect\n");
   while (!client.connect(host, Port)) {
-    log_i("Scratch Host IP is {" + String(host) + "}\n");
+    log_i("Scratch Host IP is {%s}\n", host);
     log_i("connection failed\n");
   }
   log_i("create tcp ok\n");
@@ -187,20 +187,20 @@ void loop() {
   //// Receive msg
   len = 0;
   int av = client.available();
-  log_i("available:" + String(av) + "\n");
+  log_i("available:%d\n", av);
   //if (av > 0) {
   client.setTimeout(100);
   len = client.readBytes(buffer, sizeof(buffer));
   //}
 
-  log_i("Get length:" + String(len) + "\n");
+  log_i("Get length:%d\n", len);
 
   while (len > 0) {
     M5.Lcd.setCursor(0, 0);
     log_i("Received:[");
     // Skip 4 byte message header and get string.
     for (uint32_t i = 4; i < len; i++) {
-      log_i((char)buffer[i]);
+      log_i("%c", (char)buffer[i]);
       msg += (char)buffer[i];
     }
     log_i("]\n");
@@ -213,7 +213,7 @@ void loop() {
       // message
       msg.replace("broadcast ", "");
       msg.replace("\"", "");
-      log_i("broadcast:\"" + msg + "\"\n");
+      log_i("broadcast:\"%s\"\n", msg);
       M5.Lcd.println("broadcast:\"" + msg + "\"");
     } else if (msg.startsWith("sensor-update")) {
       // value
@@ -242,13 +242,13 @@ void loop() {
             M5.Power.setLed(constrain(led, 0, 255));
             break;
         }
-        //log_i("msg:\"" + msg + "\"\n");
+        //log_i("msg:\"%s\"\n",msg);
 
         // Skip var_value
         while (msg.charAt(0) != ' ' && msg.length() > 0) {
           msg = msg.substring(1);
         }
-        //log_i("msg2:\"" + msg + "\"\n");
+        //log_i("msg2:\"%s\"\n",msg);
       }
 
       //// Output
@@ -265,7 +265,7 @@ void loop() {
       M5.Lcd.fillScreen(uint16_t(((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3)));
 
       M5.Lcd.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
-      log_i("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")\n");
+      log_i("RGB:(%d,%d,%d)\n", r, g, b);
       // msg
       //M5.Lcd.setCursor(0, 100);
       //M5.Lcd.setTextSize(5);
@@ -297,7 +297,7 @@ void loop() {
       Wire.requestFrom(FACES_KEYBOARD_I2C_ADDR, 1);
       while (Wire.available()) {
         char c = Wire.read();  // receive a byte as character
-        log_i(c);              // print the character
+        log_i("%c", c);        // print the character
         broadcast("Key_" + String(c));
       }
     }
