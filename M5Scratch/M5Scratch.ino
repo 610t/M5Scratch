@@ -88,30 +88,29 @@ void setup() {
   M5.Lcd.println("Welcome to Scratch Remoto Sensor!!");
 
   M5.Lcd.println("WiFi connected.");
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
+  log_i("Connecting to %s\n", ssid);
 
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     M5.Lcd.print(".");
-    Serial.print(".");
+    log_i(".");
   }
 
-  Serial.println("Wifi OK");
+  log_i("Wifi OK\n");
 
   // Wire setup
   Wire.begin();
   pinMode(5, INPUT);
   digitalWrite(5, HIGH);
 
-  Serial.println("Scratch Host IP is {" + String(host) + "}");
+  log_i("Scratch Host IP is {" + String(host) + "}\n");
   delay(1000);
 }
 
 String getValue(char name, String msg) {
   msg.replace(String(name) + " ", "");
-  Serial.println("str:\"" + String(name) + ":" + String(msg) + "\"");
+  log_i("str:\"" + String(name) + ":" + String(msg) + "\"\n");
   return msg;
 }
 
@@ -124,13 +123,13 @@ void broadcast(String msg) {
   strcpy(scmd + 4, buf);
   //scmd[3] = (uint8_t)strlen(scmd + 4);
   scmd[3] = cmd.length();
-  Serial.println(">pre broadcast:" + String(scmd + 4));
+  log_i(">pre broadcast:" + String(scmd + 4) + "\n");
   client.setTimeout(100);
   //  if (client.write((const uint8_t*)scmd, 4 + strlen(scmd + 4))) {
   if (client.write((const uint8_t*)scmd, 4 + cmd.length())) {
-    Serial.println(">>broadcast:" + msg + " ok");
+    log_i(">>broadcast:" + msg + " ok\n");
   } else {
-    Serial.println(">>broadcast:" + msg + " err");
+    log_i(">>broadcast:" + msg + " err\n");
   }
 }
 
@@ -145,10 +144,10 @@ void sensor_update(String varName, String varValue) {
   delay(10);
   client.setTimeout(100);
   if (client.write((const uint8_t*)scmd, 4 + strlen(scmd + 4))) {
-    //Serial.println("sensor-update ok");
+    //log_i("sensor-update ok\n");
     return;
   } else {
-    //Serial.println("sensor-update err");
+    //log_i("sensor-update err\n");
     return;
   }
 }
@@ -161,50 +160,50 @@ void loop() {
 
   M5.update();
 
-  Serial.println("Before client connect");
+  log_i("Before client connect\n");
   while (!client.connect(host, Port)) {
-    Serial.println("Scratch Host IP is {" + String(host) + "}");
-    Serial.println("connection failed");
+    log_i("Scratch Host IP is {" + String(host) + "}\n");
+    log_i("connection failed\n");
   }
-  Serial.println("create tcp ok");
+  log_i("create tcp ok\n");
 
   while (!client.connected()) {
-    Serial.println("Stop connection");
+    log_i("Stop connection\n");
     client.stop();
-    Serial.println("Before client.connect");
+    log_i("Before client.connect\n");
     //client.setTimeout(100);
     client.connect(host, Port);
-    Serial.println("After client.connect");
+    log_i("After client.connect\n");
   }
-  Serial.println("Client connected");
+  log_i("Client connected\n");
 
   // Read all from server and print them to Serial.
   uint32_t len = 0;
   String msg = "";
   char* c;
 
-  Serial.println("Let us go to read messages.");
+  log_i("Let us go to read messages.\n");
 
   //// Receive msg
   len = 0;
   int av = client.available();
-  Serial.println("available:" + String(av));
+  log_i("available:" + String(av) + "\n");
   //if (av > 0) {
   client.setTimeout(100);
   len = client.readBytes(buffer, sizeof(buffer));
   //}
 
-  Serial.println("Get length:" + String(len));
+  log_i("Get length:" + String(len) + "\n");
 
   while (len > 0) {
     M5.Lcd.setCursor(0, 0);
-    Serial.print("Received:[");
+    log_i("Received:[");
     // Skip 4 byte message header and get string.
     for (uint32_t i = 4; i < len; i++) {
-      Serial.print((char)buffer[i]);
+      log_i((char)buffer[i]);
       msg += (char)buffer[i];
     }
-    Serial.print("]\r\n");
+    log_i("]\n");
 
     while ((!msg.startsWith("broadcast") && !msg.startsWith("sensor-update")) && msg.length() > 0) {
       msg = msg.substring(1);
@@ -214,7 +213,7 @@ void loop() {
       // message
       msg.replace("broadcast ", "");
       msg.replace("\"", "");
-      Serial.println("broadcast:\"" + msg + "\"");
+      log_i("broadcast:\"" + msg + "\"\n");
       M5.Lcd.println("broadcast:\"" + msg + "\"");
     } else if (msg.startsWith("sensor-update")) {
       // value
@@ -243,13 +242,13 @@ void loop() {
             M5.Power.setLed(constrain(led, 0, 255));
             break;
         }
-        //Serial.println("msg:\"" + msg + "\"");
+        //log_i("msg:\"" + msg + "\"\n");
 
         // Skip var_value
         while (msg.charAt(0) != ' ' && msg.length() > 0) {
           msg = msg.substring(1);
         }
-        //Serial.println("msg2:\"" + msg + "\"");
+        //log_i("msg2:\"" + msg + "\"\n");
       }
 
       //// Output
@@ -266,13 +265,13 @@ void loop() {
       M5.Lcd.fillScreen(uint16_t(((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3)));
 
       M5.Lcd.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
-      Serial.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
+      log_i("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")\n");
       // msg
       //M5.Lcd.setCursor(0, 100);
       //M5.Lcd.setTextSize(5);
       M5.Lcd.println("s:\"" + s + "\"");
     } else {
-      Serial.println("NOP");
+      log_i("NOP\n");
     }
 
     len = msg.length();
@@ -298,7 +297,7 @@ void loop() {
       Wire.requestFrom(FACES_KEYBOARD_I2C_ADDR, 1);
       while (Wire.available()) {
         char c = Wire.read();  // receive a byte as character
-        Serial.print(c);       // print the character
+        log_i(c);              // print the character
         broadcast("Key_" + String(c));
       }
     }
