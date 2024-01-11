@@ -278,21 +278,24 @@ void loop() {
 
   log_i("Get length:%d\n", len);
 
+  log_i("Received:[");
+  // Skip 4 byte message header and get string.
+  for (uint32_t i = 4; i < len; i++) {
+    log_i("%c", (char)buffer[i]);
+    if (buffer[i] != '"') {  // Skip '"'
+      msg += (char)buffer[i];
+    }
+  }
+  log_i("]\n");
+
   while (len > 0) {
     M5.Lcd.setCursor(0, 0);
-    log_i("Received:[");
-    // Skip 4 byte message header and get string.
-    for (uint32_t i = 4; i < len; i++) {
-      log_i("%c", (char)buffer[i]);
-      if (buffer[i] != '"') {  // Skip '"'
-        msg += (char)buffer[i];
-      }
-    }
-    log_i("]\n");
 
+    int subst_length = 0;
     while ((!msg.startsWith("broadcast") && !msg.startsWith("sensor-update")) && msg.length() > 0) {
-      msg = msg.substring(1);
+      subst_length++;
     }
+    msg = msg.substring(subst_length);
 
     if (msg.startsWith("broadcast") == true) {
       // message
