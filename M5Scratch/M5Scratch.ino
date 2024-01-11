@@ -251,7 +251,8 @@ void send_M5Stack_data() {
 }
 
 void loop() {
-  uint8_t buffer[128] = { 0 };
+  uint8_t buffer[512] = { 0 };
+  uint8_t header[4] = { 0 };
   int r = 0, g = 0, b = 0;
   String s;
   char* str;
@@ -273,14 +274,16 @@ void loop() {
   log_i("available:%d\n", av);
   //if (av > 0) {
   client.setTimeout(100);
-  len = client.readBytes(buffer, sizeof(buffer));
+  client.readBytes(header, 4);  // Read length of command.
+  uint32_t cmd_size = header[3] | (header[2] << 8) | (header[1] << 16) | (header[0] << 24);
+  len = client.readBytes(buffer, cmd_size);
   //}
 
   log_i("Get length:%d\n", len);
 
   log_i("Received:[");
   // Skip 4 byte message header and get string.
-  for (uint32_t i = 4; i < len; i++) {
+  for (uint32_t i = 0; i < len; i++) {
     log_i("%c", (char)buffer[i]);
     if (buffer[i] != '"') {  // Skip '"'
       msg += (char)buffer[i];
@@ -290,12 +293,6 @@ void loop() {
 
   while (len > 0) {
     M5.Lcd.setCursor(0, 0);
-
-    int subst_length = 0;
-    while ((!msg.startsWith("broadcast") && !msg.startsWith("sensor-update")) && msg.length() > 0) {
-      subst_length++;
-    }
-    msg = msg.substring(subst_length);
 
     if (msg.startsWith("broadcast") == true) {
       // message
