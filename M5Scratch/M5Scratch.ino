@@ -59,9 +59,15 @@ const int Port = 42001;
 
 //// Global variables
 m5::board_t myBoard = m5gfx::board_unknown;  // M5Stack board name
+M5GFX display;                               // Draw cat image.
 CRGB leds[NUM_LEDS];                         // FastLED for M5Stack Atom
-String r = "";                               // String received
 WiFiClient client;                           // WiFi connect
+
+//// Draw cat image related.
+#include "cat_img.h"  // Scratch cat image.
+extern const uint8_t cat[];
+int_fast16_t x = 0, y = 0;  // Location
+float z;                    // Zoom
 
 void setup() {
   // Init M5
@@ -80,6 +86,9 @@ void setup() {
     FastLED.addLeds<WS2811, LED_DATA_PIN, GRB>(leds, NUM_LEDS);
     FastLED.setBrightness(20);
   }
+
+  // Init display
+  display.begin();
 
   // Init Serial
   Serial.begin(115200);
@@ -225,6 +234,18 @@ void loop() {
       while (msg.length() > 0) {
         msg.trim();
         switch (msg.charAt(0)) {
+          case 'x':
+            // Cat x axis location
+            x = constrain(int(getValue('x', msg).toFloat()), -240, 240);
+            break;
+          case 'y':
+            // Cat y axis location
+            y = constrain(int(getValue('y', msg).toFloat()), -180, 180);
+            break;
+          case 'z':
+            // Cat zoom value
+            z = constrain(getValue('z', msg).toFloat(), 1, 10);
+            break;
           case 'r':
             r = constrain(int(getValue('r', msg).toFloat()), 0, 255);
             break;
@@ -262,10 +283,24 @@ void loop() {
       }
 
       // Fill background (r,g,b) for other boards.
-      M5.Lcd.fillScreen(uint16_t(((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3)));
+      int rgb = uint16_t(((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3));
+      M5.Lcd.fillScreen(rgb);
+
+      // Draw top right circle
+      // int circle_r = 40;
+      // M5.Lcd.fillCircle(display.width() - circle_r, circle_r, circle_r, rgb);
 
       M5.Lcd.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
       log_i("RGB:(%d,%d,%d)\n", r, g, b);
+
+      // Draw cat
+      display.drawPng(cat, ~0u,                                   // Data
+                      x, y,                                       // Position
+                      display.width() * 2, display.height() * 2,  // Size
+                      0, 0,                                       // Offset
+                      z, 0,                                       // Magnify
+                      datum_t::middle_center);
+
       // msg
       //M5.Lcd.setCursor(0, 100);
       //M5.Lcd.setTextSize(5);
