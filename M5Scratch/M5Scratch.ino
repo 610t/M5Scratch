@@ -284,7 +284,9 @@ void loop() {
     // Skip 4 byte message header and get string.
     for (uint32_t i = 4; i < len; i++) {
       log_i("%c", (char)buffer[i]);
-      msg += (char)buffer[i];
+      if (buffer[i] != '"') {  // Skip '"'
+        msg += (char)buffer[i];
+      }
     }
     log_i("]\n");
 
@@ -294,15 +296,11 @@ void loop() {
 
     if (msg.startsWith("broadcast") == true) {
       // message
-      msg.replace("broadcast ", "");
-      msg.replace("\"", "");
       log_i("broadcast:\"%s\"\n", msg);
       M5.Lcd.println("broadcast:\"" + msg + "\"");
     } else if (msg.startsWith("sensor-update")) {
       // value
       msg.replace("sensor-update ", "");
-      msg.replace("\"", "");
-      msg.trim();
       //M5.Lcd.println("sensor-update\"" + msg + "\"");
 
       while (msg.length() > 0) {
