@@ -69,7 +69,7 @@ extern const uint8_t cat[];
 int_fast16_t x = 0, y = 0;  // Location
 float z;                    // Zoom
 
-void setup() {
+void setup_M5Stack() {
   // Init M5
   auto cfg = M5.config();
   M5.begin(cfg);
@@ -90,12 +90,13 @@ void setup() {
   // Init display
   display.begin();
 
-  // Init Serial
-  Serial.begin(115200);
-  delay(10);
+  // Wire setup for M5Stack face keyboard.
+  Wire.begin();
+  pinMode(5, INPUT);
+  digitalWrite(5, HIGH);
+}
 
-  M5.Lcd.println("Welcome to Scratch Remoto Sensor!!");
-
+void setup_WiFi() {
   M5.Lcd.println("WiFi connected.");
   log_i("Connecting to %s\n", ssid);
 
@@ -107,14 +108,15 @@ void setup() {
   }
 
   log_i("Wifi OK\n");
+}
 
-  // Wire setup
-  Wire.begin();
-  pinMode(5, INPUT);
-  digitalWrite(5, HIGH);
-
+void setup() {
+  // Init Serial
+  Serial.begin(115200);
+  setup_M5Stack();
+  M5.Lcd.println("Welcome to Scratch Remoto Sensor!!");
+  setup_WiFi();
   log_i("Scratch Host IP is {%s}\n", host);
-  delay(1000);
 }
 
 String getValue(char name, String msg) {
@@ -150,7 +152,6 @@ void sensor_update(String varName, String varValue) {
   cmd.toCharArray(buf, cmd.length() + 1);
   sprintf(scmd + 4, buf);
   scmd[3] = (uint8_t)strlen(scmd + 4);
-  delay(10);
   client.setTimeout(100);
   if (client.write((const uint8_t*)scmd, 4 + strlen(scmd + 4))) {
     //log_i("sensor-update ok\n");
@@ -377,7 +378,6 @@ void loop() {
   M5.Lcd.println("gyro:(" + String(gx) + ", " + String(gy) + ", " + String(gz) + ")");
 
   // sensor-update pitch, roll, yaw
-  delay(100);
   sensor_update("pitch", String(pitch));
   sensor_update("roll", String(roll));
   sensor_update("yaw", String(yaw));
