@@ -162,14 +162,7 @@ void sensor_update(String varName, String varValue) {
   }
 }
 
-void loop() {
-  uint8_t buffer[128] = { 0 };
-  int r = 0, g = 0, b = 0;
-  String s;
-  char* str;
-
-  M5.update();
-
+void client_connect() {
   log_i("Before client connect\n");
   while (!client.connect(host, Port)) {
     log_i("Scratch Host IP is {%s}\n", host);
@@ -186,6 +179,86 @@ void loop() {
     log_i("After client.connect\n");
   }
   log_i("Client connected\n");
+}
+
+void send_broadcast() {
+  broadcast("test");  // 'test' event
+
+  // broadcast by button
+  if (M5.BtnA.isPressed()) {
+    broadcast("BtnA");
+  }
+  if (M5.BtnB.isPressed()) {
+    broadcast("BtnB");
+  }
+  if (M5.BtnC.isPressed()) {
+    broadcast("BtnC");
+  }
+
+  // keyboard input
+  if (myBoard == m5gfx::board_M5Stack) {
+
+    if (digitalRead(5) == LOW) {
+      Wire.requestFrom(FACES_KEYBOARD_I2C_ADDR, 1);
+      while (Wire.available()) {
+        char c = Wire.read();  // receive a byte as character
+        log_i("%c", c);        // print the character
+        broadcast("Key_" + String(c));
+      }
+    }
+  }
+}
+
+void send_sensor_update() {
+  // define all sensor valiable.
+  float ax = 0,
+        ay = 0, az = 0;                // Accel
+  float gx = 0, gy = 0, gz = 0;        // Gyro
+  float pitch = 0, roll = 0, yaw = 0;  // Posure
+  float temp = 0;                      // Temperature
+
+  M5.Imu.getAccel(&ax, &ay, &az);  // get accel
+  M5.Imu.getGyro(&gx, &gy, &gz);   // get gyro
+  M5.Imu.getTemp(&temp);           // get temperature
+
+  sensor_update("v", String(random(0, 255)));  // random number 'v'
+  // sensor-update accel: normarize to fit for Scratch display.
+  sensor_update("ax", String(-1 * 240 * ay));
+  sensor_update("ay", String(+1 * 180 * ax));
+  sensor_update("az", String(1000 * az));
+  M5.Lcd.println("accel:(" + String(ax) + ", " + String(ay) + ", " + String(az) + ")");
+
+  // sensor-update gyro
+  sensor_update("gx", String(gx));
+  sensor_update("gy", String(gy));
+  sensor_update("gz", String(gz));
+  M5.Lcd.println("gyro:(" + String(gx) + ", " + String(gy) + ", " + String(gz) + ")");
+
+  // sensor-update pitch, roll, yaw
+  sensor_update("pitch", String(pitch));
+  sensor_update("roll", String(roll));
+  sensor_update("yaw", String(yaw));
+  M5.Lcd.println("p,r,y:(" + String(pitch) + ", " + String(roll) + ", " + String(yaw) + ")");
+
+  // sensor-update temp
+  M5.Lcd.println("temp:" + String(temp));
+  sensor_update("temp", String(temp));
+}
+
+void send_M5Stack_data() {
+  send_broadcast();
+  send_sensor_update();
+}
+
+void loop() {
+  uint8_t buffer[128] = { 0 };
+  int r = 0, g = 0, b = 0;
+  String s;
+  char* str;
+
+  M5.update();
+
+  client_connect();
 
   // Read all from server and print them to Serial.
   uint32_t len = 0;
@@ -313,79 +386,7 @@ void loop() {
     len = msg.length();
   }
 
-  // broadcast
-  broadcast("test");
-
-  // broadcast by button
-  if (M5.BtnA.isPressed()) {
-    broadcast("BtnA");
-  }
-  if (M5.BtnB.isPressed()) {
-    broadcast("BtnB");
-  }
-  if (M5.BtnC.isPressed()) {
-    broadcast("BtnC");
-  }
-
-  if (myBoard == m5gfx::board_M5Stack) {
-    // keyboard input
-    if (digitalRead(5) == LOW) {
-      Wire.requestFrom(FACES_KEYBOARD_I2C_ADDR, 1);
-      while (Wire.available()) {
-        char c = Wire.read();  // receive a byte as character
-        log_i("%c", c);        // print the character
-        broadcast("Key_" + String(c));
-      }
-    }
-  }
-
-  // sensor-update
-  sensor_update("v", String(random(0, 255)));
-
-
-  // define all sensor valiable.
-  float ax = 0;
-  float ay = 0;
-  float az = 0;
-
-  float gx = 0;
-  float gy = 0;
-  float gz = 0;
-
-  float pitch = 0;
-  float roll = 0;
-  float yaw = 0;
-
-  float heading = 0;
-
-  float temp = 0;
-
-  M5.Imu.getAccel(&ax, &ay, &az);  // get accel
-  M5.Imu.getGyro(&gx, &gy, &gz);   // get gyro
-  M5.Imu.getTemp(&temp);           // get temperature
-
-  //// send sensor-update
-  // sensor-update accel
-  sensor_update("ax", String(-1 * 240 * ay));
-  sensor_update("ay", String(+1 * 180 * ax));
-  sensor_update("az", String(1000 * az));
-  M5.Lcd.println("accel:(" + String(ax) + ", " + String(ay) + ", " + String(az) + ")");
-
-  // sensor-update gyro
-  sensor_update("gx", String(gx));
-  sensor_update("gy", String(gy));
-  sensor_update("gz", String(gz));
-  M5.Lcd.println("gyro:(" + String(gx) + ", " + String(gy) + ", " + String(gz) + ")");
-
-  // sensor-update pitch, roll, yaw
-  sensor_update("pitch", String(pitch));
-  sensor_update("roll", String(roll));
-  sensor_update("yaw", String(yaw));
-  M5.Lcd.println("p,r,y:(" + String(pitch) + ", " + String(roll) + ", " + String(yaw) + ")");
-
-  // sensor-update temp
-  M5.Lcd.println("temp:" + String(temp));
-  sensor_update("temp", String(temp));
+  send_M5Stack_data();
 
   client.stop();
 }
