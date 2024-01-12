@@ -59,7 +59,6 @@ const int Port = 42001;
 
 //// Global variables
 m5::board_t myBoard = m5gfx::board_unknown;  // M5Stack board name
-M5GFX display;                               // Draw cat image.
 CRGB leds[NUM_LEDS];                         // FastLED for M5Stack Atom
 WiFiClient client;                           // WiFi connect
 
@@ -86,9 +85,6 @@ void setup_M5Stack() {
     FastLED.addLeds<WS2811, LED_DATA_PIN, GRB>(leds, NUM_LEDS);
     FastLED.setBrightness(20);
   }
-
-  // Init display
-  display.begin();
 
   // Wire setup for M5Stack face keyboard.
   Wire.begin();
@@ -360,18 +356,18 @@ void loop() {
 
       // Draw top right circle
       // int circle_r = 40;
-      // M5.Lcd.fillCircle(display.width() - circle_r, circle_r, circle_r, rgb);
+      // M5.Lcd.fillCircle(M5.Lcd.display.width() - circle_r, circle_r, circle_r, rgb);
 
       M5.Lcd.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
       log_i("RGB:(%d,%d,%d)\n", r, g, b);
 
       // Draw cat
-      display.drawPng(cat, ~0u,                                   // Data
-                      x, y,                                       // Position
-                      display.width() * 2, display.height() * 2,  // Size
-                      0, 0,                                       // Offset
-                      z, 0,                                       // Magnify
-                      datum_t::middle_center);
+      M5.Lcd.drawPng(cat, ~0u,                                 // Data
+                     x, y,                                     // Position
+                     M5.Lcd.width() * 2, M5.Lcd.height() * 2,  // Size
+                     0, 0,                                     // Offset
+                     z, 0,                                     // Magnify
+                     datum_t::middle_center);
 
       // msg
       //M5.Lcd.setCursor(0, 100);
