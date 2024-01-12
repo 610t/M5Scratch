@@ -246,26 +246,10 @@ void send_M5Stack_data() {
   send_sensor_update();
 }
 
-void loop() {
-  uint8_t buffer[512] = { 0 };
+int receive_msg(uint8_t* buffer) {
   uint8_t header[4] = { 0 };
-  int r = 0, g = 0, b = 0;
-  String s;
-  char* str;
+  int len = 0;
 
-  M5.update();
-
-  client_connect();
-
-  // Read all from server and print them to Serial.
-  uint32_t len = 0;
-  String msg = "";
-  char* c;
-
-  log_i("Let us go to read messages.\n");
-
-  //// Receive msg
-  len = 0;
   int av = client.available();
   log_i("available:%d\n", av);
   //if (av > 0) {
@@ -274,18 +258,38 @@ void loop() {
   uint32_t cmd_size = header[3] | (header[2] << 8) | (header[1] << 16) | (header[0] << 24);
   len = client.readBytes(buffer, cmd_size);
   //}
+  return (len);
+}
 
-  log_i("Get length:%d\n", len);
+String create_msg(uint8_t* buffer, int len) {
+  String msg = "";
 
-  log_i("Received:[");
-  // Skip 4 byte message header and get string.
   for (uint32_t i = 0; i < len; i++) {
-    log_i("%c", (char)buffer[i]);
     if (buffer[i] != '"') {  // Skip '"'
       msg += (char)buffer[i];
     }
   }
-  log_i("]\n");
+
+  return (msg);
+}
+
+void loop() {
+  uint8_t buffer[512] = { 0 };
+  int r = 0, g = 0, b = 0;
+  String s;
+
+  M5.update();
+
+  client_connect();
+
+  // Read all from server and print them to Serial.
+  String msg = "";
+
+  log_i("Let us go to read messages.\n");
+
+  int rcv_len = receive_msg(buffer);
+  msg = create_msg(buffer, rcv_len);
+  int len = msg.length();
 
   while (len > 0) {
     M5.Lcd.setCursor(0, 0);
