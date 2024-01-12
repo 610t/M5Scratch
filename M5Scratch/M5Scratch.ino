@@ -344,6 +344,8 @@ void loop() {
         //log_i("msg2:\"%s\"\n",msg);
       }
 
+      send_M5Stack_data();
+
       //// Output
       // RGB background
       // Fill background (r,g,b) for ATOM Matrix
@@ -383,8 +385,6 @@ void loop() {
 
     len = msg.length();
   }
-
-  send_M5Stack_data();
 
   client.stop();
 }
