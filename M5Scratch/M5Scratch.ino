@@ -34,19 +34,19 @@
    This program is demonstration that Scrath Remote Sensor Protocol with M5Stack.
 */
 
-/*
-  network.h contains network information below:
+//// Network settings
 
-  const char* ssid     = "SSID";
-  const char* password = "PASSWORD";
-  const char* host     = "Scratch Host IP";
-*/
-#include "network.h"
+// If you use fixed network settings below, use #undef WIFI_MODE_PREV
+#define WIFI_MODE_PREV  // Use privious settings to setting up Wi-Fi.
+// #undef WIFI_MODE_PREV
 
-const int Port = 42001;
+char* ssid = "SSID";          // Wi-Fi SSID
+char* password = "PASSWORD";  // Wi-Fi password or seacret key
+char host[128] = { 0 };       // Scratch Host IP
+const int Port = 42001;       // Scratch remote sensor port
 
+#include <SD.h>
 #include <M5Unified.h>
-
 #include <WiFi.h>
 #include <Wire.h>
 
@@ -96,7 +96,49 @@ void setup_WiFi() {
   M5.Lcd.println("WiFi connected.");
   log_i("Connecting to %s\n", ssid);
 
-  WiFi.begin(ssid, password);
+  //// Wi-Fi & Host IP settings.
+  if (SD.begin(GPIO_NUM_4, SPI, 25000000)) {
+    // Setting up network information from SD card file "/m5scratch.txt".
+    auto fs = SD.open("/m5scratch.txt", FILE_READ);
+    if (fs) {
+      size_t sz = fs.size();
+      char buf[sz + 1];
+      fs.read((uint8_t*)buf, sz);
+      buf[sz] = 0;
+      fs.close();
+
+      // Replace '\n' with 0 to end in NULL.
+      for (int x = 0; x < sz; x++) {
+        if (buf[x] == 0x0a || buf[x] == 0x0d) {
+          buf[x] = 0;
+        }
+      }
+
+      int ssid_pos = 0;
+      int hostip_pos = 0;
+      for (ssid_pos = 0; buf[ssid_pos] != 0; ssid_pos++) {}
+      ssid_pos++;
+      Serial.printf("ssid_pos:%d\n", ssid_pos);
+      for (hostip_pos = ssid_pos; buf[hostip_pos] != 0; hostip_pos++) {}
+      hostip_pos++;
+      WiFi.begin(buf, &buf[ssid_pos]);
+
+      // Seting up Scratch host IP from SD card.
+      int i = 0;
+      for (int c = hostip_pos; buf[c] != 0; c++) {
+        host[i] = buf[c];
+        i++;
+      }
+      host[i] = 0;  // NULL terminate.
+    }
+  } else {
+#if defined(WIFI_MODE_PREV)
+    WiFi.begin();  // Use privious setting.
+#else
+    WiFi.begin(ssid, password);  // Use fixed string.
+#endif
+  }
+
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     M5.Lcd.print(".");
