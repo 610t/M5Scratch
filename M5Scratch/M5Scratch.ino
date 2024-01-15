@@ -47,6 +47,7 @@ const int Port = 42001;       // Scratch remote sensor port
 
 #include <SD.h>
 #include <M5Unified.h>
+#include <nvs.h>
 #include <WiFi.h>
 #include <Wire.h>
 
@@ -131,12 +132,39 @@ void setup_WiFi() {
       }
       host[i] = 0;  // NULL terminate.
     }
+
+    // Save Scratch host IP to NVS.
+    uint32_t nvs_handle;
+    if (ESP_OK == nvs_open("ScratchHost", NVS_READWRITE, &nvs_handle)) {
+      nvs_set_str(nvs_handle, "ScratchHost", host);
+    }
   } else {
 #if defined(WIFI_MODE_PREV)
     WiFi.begin();  // Use privious setting.
 #else
     WiFi.begin(ssid, password);  // Use fixed string.
 #endif
+  }
+
+  {
+    // Read Scratch host IP from NVS.
+    uint32_t nvs_handle;
+
+    if (ESP_OK == nvs_open("ScratchHost", NVS_READONLY, &nvs_handle)) {
+      size_t length;
+      if (ESP_OK == nvs_get_str(nvs_handle, "ScratchHost", nullptr, &length) && length) {
+        char scratchhost_ip[length + 1];
+        if (ESP_OK == nvs_get_str(nvs_handle, "ScratchHost", scratchhost_ip, &length)) {
+          int i;
+          for (i = 0; i < length; i++) {
+            host[i] = scratchhost_ip[i];
+          }
+          host[i] = 0;  // NULL terminate
+          Serial.printf("Host IP:%s\n", host);
+        }
+      }
+      nvs_close(nvs_handle);
+    }
   }
 
   while (WiFi.status() != WL_CONNECTED) {
