@@ -70,6 +70,7 @@ WiFiClient client;                           // WiFi connect
 //// Draw cat image related.
 #include "cat_img.h"  // Scratch cat image.
 extern const uint8_t cat[];
+bool cat_flag = true;       // Show cat?
 int_fast16_t x = 0, y = 0;  // Location
 float z;                    // Zoom
 
@@ -408,6 +409,8 @@ void loop() {
         } else if (!strcmp(cmd_str, "l")) {
           int led = int(getValue("l", msg).toFloat());
           M5.Power.setLed(constrain(led, 0, 255));
+        } else if (!strcmp(cmd_str, "cat")) {
+          cat_flag = (!(getValue("cat", msg).toInt() == 0));
         }
         log_i("msg:\"%s\"\n", msg);
 
@@ -441,12 +444,14 @@ void loop() {
       log_i("RGB:(%d,%d,%d)\n", r, g, b);
 
       // Draw cat
-      M5.Lcd.drawPng(cat, ~0u,                                 // Data
-                     x, y,                                     // Position
-                     M5.Lcd.width() * 2, M5.Lcd.height() * 2,  // Size
-                     0, 0,                                     // Offset
-                     z, 0,                                     // Magnify
-                     datum_t::middle_center);
+      if (cat_flag) {
+        M5.Lcd.drawPng(cat, ~0u,                                 // Data
+                       x, y,                                     // Position
+                       M5.Lcd.width() * 2, M5.Lcd.height() * 2,  // Size
+                       0, 0,                                     // Offset
+                       z, 0,                                     // Magnify
+                       datum_t::middle_center);
+      }
 
       // msg
       //M5.Lcd.setCursor(0, 100);
