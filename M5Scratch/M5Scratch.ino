@@ -189,7 +189,7 @@ void setup() {
   log_i("Scratch Host IP is {%s}\n", host);
 }
 
-String getValue(char name, String msg) {
+String getValue(char* name, String msg) {
   msg.replace(String(name) + " ", "");
   log_i("str:\"%s:%s\"\n", name, msg);
   return msg;
@@ -392,21 +392,21 @@ void loop() {
 
         // Do command.
         if (!strcmp(cmd_str, "x")) {
-          x = constrain(int(getValue('x', msg).toFloat()), -240, 240);
+          x = constrain(int(getValue("x", msg).toFloat()), -240, 240);
         } else if (!strcmp(cmd_str, "y")) {
-          y = constrain(int(getValue('y', msg).toFloat()), -180, 180);
+          y = constrain(int(getValue("y", msg).toFloat()), -180, 180);
         } else if (!strcmp(cmd_str, "z")) {
-          z = constrain(getValue('z', msg).toFloat(), 1, 10);
+          z = constrain(getValue("z", msg).toFloat(), 1, 10);
         } else if (!strcmp(cmd_str, "r")) {
-          r = constrain(int(getValue('r', msg).toFloat()), 0, 255);
+          r = constrain(int(getValue("r", msg).toFloat()), 0, 255);
         } else if (!strcmp(cmd_str, "g")) {
-          g = constrain(int(getValue('g', msg).toFloat()), 0, 255);
+          g = constrain(int(getValue("g", msg).toFloat()), 0, 255);
         } else if (!strcmp(cmd_str, "b")) {
-          b = constrain(int(getValue('b', msg).toFloat()), 0, 255);
+          b = constrain(int(getValue("b", msg).toFloat()), 0, 255);
         } else if (!strcmp(cmd_str, "s")) {
-          s = getValue('s', msg);
+          s = getValue("s", msg);
         } else if (!strcmp(cmd_str, "l")) {
-          int led = int(getValue('l', msg).toFloat());
+          int led = int(getValue("l", msg).toFloat());
           M5.Power.setLed(constrain(led, 0, 255));
         }
         log_i("msg:\"%s\"\n", msg);
