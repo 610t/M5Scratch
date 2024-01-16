@@ -67,12 +67,18 @@ m5::board_t myBoard = m5gfx::board_unknown;  // M5Stack board name
 CRGB leds[NUM_LEDS];                         // FastLED for M5Stack Atom
 WiFiClient client;                           // WiFi connect
 
-//// Draw cat image related.
+//// Draw images.
+// Draw cat image.
 #include "cat_img.h"  // Scratch cat image.
 extern const uint8_t cat[];
 bool cat_flag = true;       // Show cat?
 int_fast16_t x = 0, y = 0;  // Location
 float z;                    // Zoom
+
+// Draw stackchan image.
+#include "stackchan_img.h"  // Scratch cat image.
+extern const uint8_t stackchan[];
+bool stackchan_flag = true;
 
 void setup_M5Stack() {
   // Init M5
@@ -411,6 +417,8 @@ void loop() {
           M5.Power.setLed(constrain(led, 0, 255));
         } else if (!strcmp(cmd_str, "cat")) {
           cat_flag = (!(getValue("cat", msg).toInt() == 0));
+        } else if (!strcmp(cmd_str, "stackchan")) {
+          stackchan_flag = (!(getValue("stackchan", msg).toInt() == 0));
         }
         log_i("msg:\"%s\"\n", msg);
 
@@ -446,6 +454,16 @@ void loop() {
       // Draw cat
       if (cat_flag) {
         M5.Lcd.drawPng(cat, ~0u,                                 // Data
+                       x, y,                                     // Position
+                       M5.Lcd.width() * 2, M5.Lcd.height() * 2,  // Size
+                       0, 0,                                     // Offset
+                       z, 0,                                     // Magnify
+                       datum_t::middle_center);
+      }
+
+      // Draw Stackchan
+      if (stackchan_flag) {
+        M5.Lcd.drawPng(stackchan, ~0u,                           // Data
                        x, y,                                     // Position
                        M5.Lcd.width() * 2, M5.Lcd.height() * 2,  // Size
                        0, 0,                                     // Offset
