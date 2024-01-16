@@ -42,8 +42,12 @@
 
 char* ssid = "SSID";          // Wi-Fi SSID
 char* password = "PASSWORD";  // Wi-Fi password or seacret key
-char host[128] = { 0 };       // Scratch Host IP
-const int Port = 42001;       // Scratch remote sensor port
+#if !defined(WIFI_MODE_PREV)
+char* host = "Scratch host IP";  // Scratch Host IP: If you want to use fixed IP, please use this.
+#else
+char host[128] = { 0 };          // Scratch Host IP: for SD card setting.
+#endif
+const int Port = 42001;  // Scratch remote sensor port
 
 #include <SD.h>
 #include <M5Unified.h>
