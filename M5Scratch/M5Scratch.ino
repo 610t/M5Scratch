@@ -123,7 +123,7 @@ void setup_WiFi() {
       int hostip_pos = 0;
       for (ssid_pos = 0; buf[ssid_pos] != 0; ssid_pos++) {}
       ssid_pos++;
-      Serial.printf("ssid_pos:%d\n", ssid_pos);
+      log_i("ssid_pos:%d\n", ssid_pos);
       for (hostip_pos = ssid_pos; buf[hostip_pos] != 0; hostip_pos++) {}
       hostip_pos++;
       WiFi.begin(buf, &buf[ssid_pos]);
@@ -164,7 +164,7 @@ void setup_WiFi() {
             host[i] = scratchhost_ip[i];
           }
           host[i] = 0;  // NULL terminate
-          Serial.printf("Host IP:%s\n", host);
+          log_i("Host IP:%s\n", host);
         }
       }
       nvs_close(nvs_handle);
@@ -378,44 +378,43 @@ void loop() {
       //M5.Lcd.println("sensor-update\"" + msg + "\"");
 
       while (msg.length() > 0) {
+        char cmd_str[512] = { 0 };
+
+        //// Command handler
+        // Get command
         msg.trim();
-        switch (msg.charAt(0)) {
-          case 'x':
-            // Cat x axis location
-            x = constrain(int(getValue('x', msg).toFloat()), -240, 240);
-            break;
-          case 'y':
-            // Cat y axis location
-            y = constrain(int(getValue('y', msg).toFloat()), -180, 180);
-            break;
-          case 'z':
-            // Cat zoom value
-            z = constrain(getValue('z', msg).toFloat(), 1, 10);
-            break;
-          case 'r':
-            r = constrain(int(getValue('r', msg).toFloat()), 0, 255);
-            break;
-          case 'g':
-            g = constrain(int(getValue('g', msg).toFloat()), 0, 255);
-            break;
-          case 'b':
-            b = constrain(int(getValue('b', msg).toFloat()), 0, 255);
-            break;
-          case 's':
-            s = getValue('s', msg);
-            break;
-          case 'l':
-            int led = int(getValue('l', msg).toFloat());
-            M5.Power.setLed(constrain(led, 0, 255));
-            break;
+        int i = 0;
+        for (i = 0; i < msg.length() && msg.charAt(i) != ' '; i++) {
+          cmd_str[i] = msg.charAt(i);
         }
-        //log_i("msg:\"%s\"\n",msg);
+        cmd_str[i] = 0;
+        log_i("CMD STR:%s\n", cmd_str);
+
+        // Do command.
+        if (!strcmp(cmd_str, "x")) {
+          x = constrain(int(getValue('x', msg).toFloat()), -240, 240);
+        } else if (!strcmp(cmd_str, "y")) {
+          y = constrain(int(getValue('y', msg).toFloat()), -180, 180);
+        } else if (!strcmp(cmd_str, "z")) {
+          z = constrain(getValue('z', msg).toFloat(), 1, 10);
+        } else if (!strcmp(cmd_str, "r")) {
+          r = constrain(int(getValue('r', msg).toFloat()), 0, 255);
+        } else if (!strcmp(cmd_str, "g")) {
+          g = constrain(int(getValue('g', msg).toFloat()), 0, 255);
+        } else if (!strcmp(cmd_str, "b")) {
+          b = constrain(int(getValue('b', msg).toFloat()), 0, 255);
+        } else if (!strcmp(cmd_str, "s")) {
+          s = getValue('s', msg);
+        } else if (!strcmp(cmd_str, "l")) {
+          int led = int(getValue('l', msg).toFloat());
+          M5.Power.setLed(constrain(led, 0, 255));
+        }
+        log_i("msg:\"%s\"\n", msg);
 
         // Skip var_value
         while (msg.charAt(0) != ' ' && msg.length() > 0) {
           msg = msg.substring(1);
         }
-        //log_i("msg2:\"%s\"\n",msg);
       }
 
       send_M5Stack_data();
