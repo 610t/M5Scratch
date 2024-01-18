@@ -57,14 +57,16 @@ const int Port = 42001;  // Scratch remote sensor port
 
 #define FACES_KEYBOARD_I2C_ADDR 0x08
 
+#if !defined(CONFIG_IDF_TARGET_ESP32S3)
 // For M5Stack Atom's Matrix LED
 #include <FastLED.h>
 #define NUM_LEDS 25
 #define LED_DATA_PIN 27
+CRGB leds[NUM_LEDS];  // FastLED for M5Stack Atom
+#endif
 
 //// Global variables
 m5::board_t myBoard = m5gfx::board_unknown;  // M5Stack board name
-CRGB leds[NUM_LEDS];                         // FastLED for M5Stack Atom
 WiFiClient client;                           // WiFi connect
 
 //// Draw images.
@@ -92,11 +94,13 @@ void setup_M5Stack() {
   M5.Speaker.begin();
   myBoard = M5.getBoard();
 
+#if !defined(CONFIG_IDF_TARGET_ESP32S3)
   // Init FastLED(NeoPixel).
   if (myBoard == m5gfx::board_M5Atom) {
     FastLED.addLeds<WS2811, LED_DATA_PIN, GRB>(leds, NUM_LEDS);
     FastLED.setBrightness(20);
   }
+#endif
 
   // Wire setup for M5Stack face keyboard.
   Wire.begin();
@@ -432,6 +436,8 @@ void loop() {
 
       //// Output
       // RGB background
+
+#if !defined(CONFIG_IDF_TARGET_ESP32S3)
       // Fill background (r,g,b) for ATOM Matrix
       if (myBoard == m5gfx::board_M5Atom) {
         for (int i = 0; i < NUM_LEDS; i++) {
@@ -439,6 +445,7 @@ void loop() {
         }
         FastLED.show();
       }
+#endif
 
       // Fill background (r,g,b) for other boards.
       int rgb = uint16_t(((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3));
