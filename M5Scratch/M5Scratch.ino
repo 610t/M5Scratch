@@ -51,6 +51,7 @@ const int Port = 42001;  // Scratch remote sensor port
 
 #include <SD.h>
 #include <M5Unified.h>
+#include <M5Dial.h>
 #include <nvs.h>
 #include <WiFi.h>
 #include <Wire.h>
@@ -93,6 +94,11 @@ void setup_M5Stack() {
   M5.Speaker.config(spk_cfg);
   M5.Speaker.begin();
   myBoard = M5.getBoard();
+
+  // Setup M5Dial
+  if (myBoard == m5gfx::board_M5Dial) {
+    M5Dial.begin(cfg, true, false);
+  }
 
 #if !defined(CONFIG_IDF_TARGET_ESP32S3)
   // Init FastLED(NeoPixel).
@@ -302,6 +308,12 @@ void send_sensor_update() {
   M5.Imu.getGyro(&gx, &gy, &gz);   // get gyro
   M5.Imu.getTemp(&temp);           // get temperature
 
+  // Encoder for M5Dial
+  if (myBoard == m5gfx::board_M5Dial) {
+    long pos = M5Dial.Encoder.read();
+    sensor_update("e", String(pos));
+  }
+
   sensor_update("v", String(random(0, 255)));  // random number 'v'
   // sensor-update accel: normarize to fit for Scratch display.
   sensor_update("ax", String(-1 * 240 * ay));
@@ -364,6 +376,9 @@ void loop() {
   String s;
 
   M5.update();
+  if (myBoard == m5gfx::board_M5Dial) {
+    M5Dial.update();
+  }
 
   client_connect();
 
