@@ -287,6 +287,9 @@ void send_sensor_update() {
   if (myBoard == m5gfx::board_M5Dial) {
     long pos = M5Dial.Encoder.read();
     sensor_update("e", String(pos));
+    auto t = M5Dial.Touch.getDetail();
+    sensor_update("tx", String(t.x));
+    sensor_update("ty", String(t.y));
   }
 
   sensor_update("v", String(random(0, 255)));  // random number 'v'
