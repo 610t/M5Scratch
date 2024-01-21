@@ -49,14 +49,14 @@ WiFiClient client;                           // WiFi connect
 // Draw cat image.
 #include "cat_img.h"  // Scratch cat image.
 extern const uint8_t cat[];
-bool cat_flag = true;       // Show cat?
+bool cat_flag = false;      // Show cat?
 int_fast16_t x = 0, y = 0;  // Location
 float z;                    // Zoom
 
 // Draw stackchan image.
 #include "stackchan_img.h"  // Scratch cat image.
 extern const uint8_t stackchan[];
-bool stackchan_flag = true;
+bool stackchan_flag = false;
 
 void setup_M5Stack() {
   // Init M5
