@@ -322,7 +322,6 @@ void send_sensor_update() {
   float ax = 0,
         ay = 0, az = 0;                // Accel
   float gx = 0, gy = 0, gz = 0;        // Gyro
-  float pitch = 0, roll = 0, yaw = 0;  // Posure
   float temp = 0;                      // Temperature
 
   M5.Imu.getAccel(&ax, &ay, &az);  // get accel
@@ -357,14 +356,6 @@ void send_sensor_update() {
   sensor_update("gz", String(gz));
   if (debug_mode) {
     M5.Lcd.println("gyro:(" + String(gx) + ", " + String(gy) + ", " + String(gz) + ")");
-  }
-
-  // sensor-update pitch, roll, yaw
-  sensor_update("pitch", String(pitch));
-  sensor_update("roll", String(roll));
-  sensor_update("yaw", String(yaw));
-  if (debug_mode) {
-    M5.Lcd.println("p,r,y:(" + String(pitch) + ", " + String(roll) + ", " + String(yaw) + ")");
   }
 
   // sensor-update temp
