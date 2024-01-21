@@ -44,6 +44,9 @@ CRGB leds[NUM_LEDS];  // FastLED for M5Stack Atom
 //// Global variables
 m5::board_t myBoard = m5gfx::board_unknown;  // M5Stack board name
 WiFiClient client;                           // WiFi connect
+// Screen size
+int screen_w = 320;
+int screen_h = 240;
 
 //// Draw images.
 // Draw cat image.
@@ -57,12 +60,54 @@ float z;                    // Zoom
 #include "stackchan_img.h"  // Scratch cat image.
 extern const uint8_t stackchan[];
 bool stackchan_flag = false;
+bool face_flag = false;
+
+//// Show stackchan face
+int norm_x(int x) {
+  return (int(x / 320.0 * screen_w));
+}
+
+int norm_y(int y) {
+  return (int(y / 240.0 * screen_h));
+}
+
+void clear_eyes() {
+  M5.Lcd.fillRect(norm_x(0), norm_y(0), norm_x(320), norm_y(120), TFT_BLACK);
+}
+
+void clear_mouth() {
+  M5.Lcd.fillRect(norm_x(0), norm_y(120), norm_x(320), norm_y(120), TFT_BLACK);
+}
+
+void draw_openeye() {
+  clear_eyes();
+  M5.Lcd.fillCircle(norm_x(90), norm_y(93), norm_y(8), TFT_WHITE);
+  M5.Lcd.fillCircle(norm_x(230), norm_y(96), norm_y(8), TFT_WHITE);
+}
+
+void draw_closeeye() {
+  clear_eyes();
+  M5.Lcd.fillRect(norm_x(82), norm_y(93), norm_x(16), norm_y(4), TFT_WHITE);
+  M5.Lcd.fillRect(norm_x(222), norm_y(93), norm_x(16), norm_y(4), TFT_WHITE);
+}
+
+void draw_closemouth() {
+  clear_mouth();
+  M5.Lcd.fillRect(norm_x(163 - 45), norm_y(148), norm_x(90), norm_y(4), TFT_WHITE);
+}
+
+void draw_openmouth() {
+  clear_mouth();
+  M5.Lcd.fillRect(norm_x(140), norm_y(130), norm_x(40), norm_y(40), TFT_WHITE);
+}
 
 void setup_M5Stack() {
   // Init M5
   auto cfg = M5.config();
   M5.begin(cfg);
   M5.Display.init();
+  screen_w = M5.Lcd.width();
+  screen_h = M5.Lcd.height();
 
   // Init speaker.
   auto spk_cfg = M5.Speaker.config();
@@ -420,6 +465,24 @@ void loop() {
           cat_flag = (!(getValue("cat", msg).toInt() == 0));
         } else if (!strcmp(cmd_str, "stackchan")) {
           stackchan_flag = (!(getValue("stackchan", msg).toInt() == 0));
+        } else if (!strcmp(cmd_str, "face_mode")) {
+          face_flag = (!(getValue("face_mode", msg).toInt() == 0));
+        } else if (!strcmp(cmd_str, "soe")) {
+          if (face_flag) {
+            draw_openeye();
+          }
+        } else if (!strcmp(cmd_str, "sce")) {
+          if (face_flag) {
+            draw_closeeye();
+          }
+        } else if (!strcmp(cmd_str, "som")) {
+          if (face_flag) {
+            draw_openmouth();
+          }
+        } else if (!strcmp(cmd_str, "scm")) {
+          if (face_flag) {
+            draw_closemouth();
+          }
         }
         log_i("msg:\"%s\"\n", msg);
 
@@ -457,21 +520,21 @@ void loop() {
 
       // Draw cat
       if (cat_flag) {
-        M5.Lcd.drawPng(cat, ~0u,                         // Data
-                       x, y,                             // Position
-                       M5.Lcd.width(), M5.Lcd.height(),  // Size
-                       0, 0,                             // Offset
-                       z, 0,                             // Magnify
+        M5.Lcd.drawPng(cat, ~0u,            // Data
+                       x, y,                // Position
+                       screen_w, screen_h,  // Size
+                       0, 0,                // Offset
+                       z, 0,                // Magnify
                        datum_t::top_left);
       }
 
       // Draw Stackchan
       if (stackchan_flag) {
-        M5.Lcd.drawPng(stackchan, ~0u,                   // Data
-                       x, y,                             // Position
-                       M5.Lcd.width(), M5.Lcd.height(),  // Size
-                       0, 0,                             // Offset
-                       z, 0,                             // Magnify
+        M5.Lcd.drawPng(stackchan, ~0u,      // Data
+                       x, y,                // Position
+                       screen_w, screen_h,  // Size
+                       0, 0,                // Offset
+                       z, 0,                // Magnify
                        datum_t::top_left);
       }
 
