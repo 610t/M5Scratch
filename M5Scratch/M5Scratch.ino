@@ -44,6 +44,7 @@ CRGB leds[NUM_LEDS];  // FastLED for M5Stack Atom
 //// Global variables
 m5::board_t myBoard = m5gfx::board_unknown;  // M5Stack board name
 WiFiClient client;                           // WiFi connect
+bool debug_mode = false;                     // Debug mode: show some useful variable value.
 // Screen size
 int screen_w = 320;
 int screen_h = 240;
@@ -346,22 +347,30 @@ void send_sensor_update() {
   sensor_update("ax", String(-1 * 240 * ay));
   sensor_update("ay", String(+1 * 180 * ax));
   sensor_update("az", String(1000 * az));
-  M5.Lcd.println("accel:(" + String(ax) + ", " + String(ay) + ", " + String(az) + ")");
+  if (debug_mode) {
+    M5.Lcd.println("accel:(" + String(ax) + ", " + String(ay) + ", " + String(az) + ")");
+  }
 
   // sensor-update gyro
   sensor_update("gx", String(gx));
   sensor_update("gy", String(gy));
   sensor_update("gz", String(gz));
-  M5.Lcd.println("gyro:(" + String(gx) + ", " + String(gy) + ", " + String(gz) + ")");
+  if (debug_mode) {
+    M5.Lcd.println("gyro:(" + String(gx) + ", " + String(gy) + ", " + String(gz) + ")");
+  }
 
   // sensor-update pitch, roll, yaw
   sensor_update("pitch", String(pitch));
   sensor_update("roll", String(roll));
   sensor_update("yaw", String(yaw));
-  M5.Lcd.println("p,r,y:(" + String(pitch) + ", " + String(roll) + ", " + String(yaw) + ")");
+  if (debug_mode) {
+    M5.Lcd.println("p,r,y:(" + String(pitch) + ", " + String(roll) + ", " + String(yaw) + ")");
+  }
 
   // sensor-update temp
-  M5.Lcd.println("temp:" + String(temp));
+  if (debug_mode) {
+    M5.Lcd.println("temp:" + String(temp));
+  }
   sensor_update("temp", String(temp));
 }
 
@@ -424,7 +433,9 @@ void loop() {
     if (msg.startsWith("broadcast") == true) {
       // message
       log_i("broadcast:\"%s\"\n", msg);
-      M5.Lcd.println("broadcast:\"" + msg + "\"");
+      if (debug_mode) {
+        M5.Lcd.println("broadcast:\"" + msg + "\"");
+      }
     } else if (msg.startsWith("sensor-update")) {
       // value
       msg.replace("sensor-update ", "");
@@ -444,7 +455,9 @@ void loop() {
         log_i("CMD STR:%s\n", cmd_str);
 
         // Do command.
-        if (!strcmp(cmd_str, "x")) {
+        if (!strcmp(cmd_str, "debug")) {
+          debug_mode = (!(getValue("debug", msg).toInt() == 0));
+        } else if (!strcmp(cmd_str, "x")) {
           x = constrain(int(getValue("x", msg).toFloat()), -240, 240);
         } else if (!strcmp(cmd_str, "y")) {
           y = constrain(int(getValue("y", msg).toFloat()), -180, 180);
@@ -515,7 +528,9 @@ void loop() {
       // int circle_r = 40;
       // M5.Lcd.fillCircle(M5.Lcd.display.width() - circle_r, circle_r, circle_r, rgb);
 
-      M5.Lcd.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
+      if (debug_mode) {
+        M5.Lcd.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
+      }
       log_i("RGB:(%d,%d,%d)\n", r, g, b);
 
       // Draw cat
@@ -541,7 +556,9 @@ void loop() {
       // msg
       //M5.Lcd.setCursor(0, 100);
       //M5.Lcd.setTextSize(5);
-      M5.Lcd.println("s:\"" + s + "\"");
+      if (debug_mode) {
+        M5.Lcd.println("s:\"" + s + "\"");
+      }
     } else {
       log_i("NOP\n");
     }
