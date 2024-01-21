@@ -319,23 +319,25 @@ void send_broadcast() {
 
 void send_sensor_update() {
   // define all sensor valiable.
-  float ax = 0,
-        ay = 0, az = 0;                // Accel
-  float gx = 0, gy = 0, gz = 0;        // Gyro
-  float temp = 0;                      // Temperature
+  float ax = 0, ay = 0, az = 0;  // Accel
+  float gx = 0, gy = 0, gz = 0;  // Gyro
+  float temp = 0;                // Temperature
 
   M5.Imu.getAccel(&ax, &ay, &az);  // get accel
   M5.Imu.getGyro(&gx, &gy, &gz);   // get gyro
   M5.Imu.getTemp(&temp);           // get temperature
 
-  // Encoder for M5Dial
+  // Encoder & touch panel for M5Dial
   if (myBoard == m5gfx::board_M5Dial) {
     long pos = M5Dial.Encoder.read();
     sensor_update("e", String(pos));
     auto t = M5Dial.Touch.getDetail();
     sensor_update("tx", String(t.x));
     sensor_update("ty", String(t.y));
-  } else {
+  }
+
+  // Touch panel
+  if (M5.Touch.isEnabled()) {
     auto t = M5.Touch.getDetail();
     sensor_update("tx", String(t.x));
     sensor_update("ty", String(t.y));
