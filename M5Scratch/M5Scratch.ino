@@ -364,8 +364,8 @@ void send_sensor_update() {
 
   sensor_update("v", String(random(0, 255)));  // random number 'v'
   // sensor-update accel: normarize to fit for Scratch display.
-  sensor_update("ax", String(-1 * 240 * ay));
-  sensor_update("ay", String(+1 * 180 * ax));
+  sensor_update("ax", String(-1 * 240 * ax));
+  sensor_update("ay", String(-1 * 180 * ay));
   sensor_update("az", String(1000 * az));
   if (debug_mode) {
     M5.Lcd.println("accel:(" + String(ax) + ", " + String(ay) + ", " + String(az) + ")");
