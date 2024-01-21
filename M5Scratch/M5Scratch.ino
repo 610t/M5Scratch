@@ -520,13 +520,14 @@ void loop() {
       }
 #endif
 
-      // Fill background (r,g,b) for other boards.
       int rgb = uint16_t(((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3));
-      M5.Lcd.fillScreen(rgb);
+
+      // Fill background (r,g,b) for other boards.
+      //M5.Lcd.fillScreen(rgb);
 
       // Draw top right circle
-      // int circle_r = 40;
-      // M5.Lcd.fillCircle(M5.Lcd.display.width() - circle_r, circle_r, circle_r, rgb);
+      int circle_r = 20;
+      M5.Lcd.fillCircle(screen_w - circle_r, circle_r, circle_r, rgb);
 
       if (debug_mode) {
         M5.Lcd.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
