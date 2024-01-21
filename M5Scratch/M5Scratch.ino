@@ -457,22 +457,22 @@ void loop() {
 
       // Draw cat
       if (cat_flag) {
-        M5.Lcd.drawPng(cat, ~0u,                                 // Data
-                       x, y,                                     // Position
-                       M5.Lcd.width() * 2, M5.Lcd.height() * 2,  // Size
-                       0, 0,                                     // Offset
-                       z, 0,                                     // Magnify
-                       datum_t::middle_center);
+        M5.Lcd.drawPng(cat, ~0u,                         // Data
+                       x, y,                             // Position
+                       M5.Lcd.width(), M5.Lcd.height(),  // Size
+                       0, 0,                             // Offset
+                       z, 0,                             // Magnify
+                       datum_t::top_left);
       }
 
       // Draw Stackchan
       if (stackchan_flag) {
-        M5.Lcd.drawPng(stackchan, ~0u,                           // Data
-                       x, y,                                     // Position
-                       M5.Lcd.width() * 2, M5.Lcd.height() * 2,  // Size
-                       0, 0,                                     // Offset
-                       z, 0,                                     // Magnify
-                       datum_t::middle_center);
+        M5.Lcd.drawPng(stackchan, ~0u,                   // Data
+                       x, y,                             // Position
+                       M5.Lcd.width(), M5.Lcd.height(),  // Size
+                       0, 0,                             // Offset
+                       z, 0,                             // Magnify
+                       datum_t::top_left);
       }
 
       // msg
