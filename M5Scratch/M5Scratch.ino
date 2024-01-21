@@ -252,14 +252,22 @@ void broadcast(String msg) {
   }
 }
 
-void sensor_update(String varName, String varValue) {
-  char scmd[32] = { 0 };
-  char buf[100] = { 0 };
-  String cmd = "sensor-update \"" + varName + "\" " + varValue + " ";
+char scmd[1024] = { 0 };
 
-  cmd.toCharArray(buf, cmd.length() + 1);
-  sprintf(scmd + 4, buf);
-  scmd[3] = (uint8_t)strlen(scmd + 4);
+void begin_sensor_update() {
+  // Clear buffer
+  for (int i = 0; i < sizeof(scmd); i++) {
+    scmd[i] = 0;
+  }
+
+  sprintf(scmd + 4, "sensor-update ");
+}
+
+void end_sensor_update() {
+  scmd[3] = strlen(scmd + 4) & 0xff;
+  scmd[2] = (strlen(scmd + 4) >> 8) & 0xff;
+  scmd[1] = (strlen(scmd + 4) >> 16) & 0xff;
+  scmd[0] = (strlen(scmd + 4) >> 24) & 0xff;
   client.setTimeout(100);
   if (client.write((const uint8_t*)scmd, 4 + strlen(scmd + 4))) {
     //log_i("sensor-update ok\n");
@@ -268,6 +276,15 @@ void sensor_update(String varName, String varValue) {
     //log_i("sensor-update err\n");
     return;
   }
+}
+
+void sensor_update(String varName, String varValue) {
+  char str[1024] = { 0 };
+  sprintf(str, "\"%s\" %s ", varName, varValue);
+  log_i("Str:{%s}\n", str);
+
+  strcpy(scmd + strlen(scmd + 4) + 4, str);
+  log_i("Buffer:{%s}\n", scmd + 4);
 }
 
 void client_connect() {
@@ -327,6 +344,8 @@ void send_sensor_update() {
   M5.Imu.getGyro(&gx, &gy, &gz);   // get gyro
   M5.Imu.getTemp(&temp);           // get temperature
 
+  begin_sensor_update();
+
   // Encoder & touch panel for M5Dial
   if (myBoard == m5gfx::board_M5Dial) {
     long pos = M5Dial.Encoder.read();
@@ -365,6 +384,8 @@ void send_sensor_update() {
     M5.Lcd.println("temp:" + String(temp));
   }
   sensor_update("temp", String(temp));
+
+  end_sensor_update();
 }
 
 void send_M5Stack_data() {
