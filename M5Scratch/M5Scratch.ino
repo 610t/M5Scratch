@@ -48,6 +48,8 @@ bool debug_mode = false;                     // Debug mode: show some useful var
 // Screen size
 int screen_w = 320;
 int screen_h = 240;
+// Analog pin number
+int analogPin;
 
 //// Draw images.
 // Draw cat image.
@@ -128,6 +130,43 @@ void setup_M5Stack() {
     FastLED.setBrightness(20);
   }
 #endif
+
+  // Analog pin setting
+  switch (myBoard) {
+    case m5gfx::board_M5Atom:
+    case m5gfx::board_M5AtomU:
+    case m5gfx::board_M5AtomPsram:
+      analogPin = GPIO_NUM_32;
+      break;
+    case m5gfx::board_M5Stack:
+      analogPin = GPIO_NUM_36;  // Port.B
+      break;
+    case m5gfx::board_M5StackCore2:
+    case m5gfx::board_M5Tough:
+      analogPin = GPIO_NUM_33;  // Port.A
+      break;
+    case m5gfx::board_M5StickC:
+    case m5gfx::board_M5StickCPlus:
+    case m5gfx::board_M5StickCPlus2:
+    case m5gfx::board_M5StackCoreInk:
+      analogPin = GPIO_NUM_33;  // Port.A (Universal)
+      break;
+    case m5gfx::board_M5Paper:
+      analogPin = GPIO_NUM_32;  // Port.A
+      break;
+    case m5gfx::board_M5StackCoreS3:
+      analogPin = GPIO_NUM_1;  // Port.A
+      break;
+    case m5gfx::board_M5Dial:
+      analogPin = GPIO_NUM_1;  // Port.A
+      break;
+    case m5gfx::board_M5AtomS3:
+    case m5gfx::board_M5Cardputer:
+      analogPin = GPIO_NUM_1;  // Port.A (Universal)
+      break;
+    default:
+      break;
+  }
 
   // Wire setup for M5Stack face keyboard.
   Wire.begin();
@@ -384,6 +423,9 @@ void send_sensor_update() {
     M5.Lcd.println("temp:" + String(temp));
   }
   sensor_update("temp", String(temp));
+
+  // sensor-update analog in
+  sensor_update("slider", String(analogRead(analogPin)));
 
   end_sensor_update();
 }
