@@ -447,7 +447,9 @@ int receive_msg(uint8_t* buffer) {
   client.setTimeout(100);
   client.readBytes(header, 4);  // Read length of command.
   uint32_t cmd_size = header[3] | (header[2] << 8) | (header[1] << 16) | (header[0] << 24);
+  log_i("cmd_size:%d\n", cmd_size);
   len = client.readBytes(buffer, cmd_size);
+  log_i("buffer:%s\n", buffer);
   //}
   return (len);
 }
@@ -486,142 +488,150 @@ void loop() {
   int len = msg.length();
 
   while (len > 0) {
-    M5.Lcd.setCursor(0, 0);
+    while (len > 0) {
+      M5.Lcd.setCursor(0, 0);
 
-    if (msg.startsWith("broadcast") == true) {
-      // message
-      log_i("broadcast:\"%s\"\n", msg);
-      if (debug_mode) {
-        M5.Lcd.println("broadcast:\"" + msg + "\"");
-      }
-    } else if (msg.startsWith("sensor-update")) {
-      // value
-      msg.replace("sensor-update ", "");
-      //M5.Lcd.println("sensor-update\"" + msg + "\"");
-
-      while (msg.length() > 0) {
-        char cmd_str[512] = { 0 };
-
-        //// Command handler
-        // Get command
-        msg.trim();
-        int i = 0;
-        for (i = 0; i < msg.length() && msg.charAt(i) != ' '; i++) {
-          cmd_str[i] = msg.charAt(i);
+      if (msg.startsWith("broadcast") == true) {
+        // message
+        log_i("broadcast:\"%s\"\n", msg);
+        if (debug_mode) {
+          M5.Lcd.println("broadcast:\"" + msg + "\"");
         }
-        cmd_str[i] = 0;
-        log_i("CMD STR:%s\n", cmd_str);
+        msg.replace("broadcast ", "");
+        msg = "";
+        len = 0;
+      } else if (msg.startsWith("sensor-update")) {
+        // value
+        msg.replace("sensor-update ", "");
+        //M5.Lcd.println("sensor-update\"" + msg + "\"");
 
-        // Do command.
-        if (!strcmp(cmd_str, "debug")) {
-          debug_mode = (!(getValue("debug", msg).toInt() == 0));
-        } else if (!strcmp(cmd_str, "x")) {
-          x = constrain(int(getValue("x", msg).toFloat()), -240, 240);
-        } else if (!strcmp(cmd_str, "y")) {
-          y = constrain(int(getValue("y", msg).toFloat()), -180, 180);
-        } else if (!strcmp(cmd_str, "z")) {
-          z = constrain(getValue("z", msg).toFloat(), 1, 10);
-        } else if (!strcmp(cmd_str, "r")) {
-          r = constrain(int(getValue("r", msg).toFloat()), 0, 255);
-        } else if (!strcmp(cmd_str, "g")) {
-          g = constrain(int(getValue("g", msg).toFloat()), 0, 255);
-        } else if (!strcmp(cmd_str, "b")) {
-          b = constrain(int(getValue("b", msg).toFloat()), 0, 255);
-        } else if (!strcmp(cmd_str, "s")) {
-          s = getValue("s", msg);
-        } else if (!strcmp(cmd_str, "l")) {
-          int led = int(getValue("l", msg).toFloat());
-          M5.Power.setLed(constrain(led, 0, 255));
-        } else if (!strcmp(cmd_str, "cat")) {
-          cat_flag = (!(getValue("cat", msg).toInt() == 0));
-        } else if (!strcmp(cmd_str, "stackchan")) {
-          stackchan_flag = (!(getValue("stackchan", msg).toInt() == 0));
-        } else if (!strcmp(cmd_str, "face_mode")) {
-          face_flag = (!(getValue("face_mode", msg).toInt() == 0));
-        } else if (!strcmp(cmd_str, "soe")) {
-          if (face_flag && !(getValue("soe", msg).toInt() == 0)) {
-            draw_openeye();
+        while (msg.length() > 0) {
+          char cmd_str[512] = { 0 };
+
+          //// Command handler
+          // Get command
+          msg.trim();
+          int i = 0;
+          for (i = 0; i < msg.length() && msg.charAt(i) != ' '; i++) {
+            cmd_str[i] = msg.charAt(i);
           }
-        } else if (!strcmp(cmd_str, "sce")) {
-          if (face_flag && !(getValue("sce", msg).toInt() == 0)) {
-            draw_closeeye();
+          cmd_str[i] = 0;
+          log_i("CMD STR:%s\n", cmd_str);
+
+          // Do command.
+          if (!strcmp(cmd_str, "debug")) {
+            debug_mode = (!(getValue("debug", msg).toInt() == 0));
+          } else if (!strcmp(cmd_str, "x")) {
+            x = constrain(int(getValue("x", msg).toFloat()), -240, 240);
+          } else if (!strcmp(cmd_str, "y")) {
+            y = constrain(int(getValue("y", msg).toFloat()), -180, 180);
+          } else if (!strcmp(cmd_str, "z")) {
+            z = constrain(getValue("z", msg).toFloat(), 1, 10);
+          } else if (!strcmp(cmd_str, "r")) {
+            r = constrain(int(getValue("r", msg).toFloat()), 0, 255);
+          } else if (!strcmp(cmd_str, "g")) {
+            g = constrain(int(getValue("g", msg).toFloat()), 0, 255);
+          } else if (!strcmp(cmd_str, "b")) {
+            b = constrain(int(getValue("b", msg).toFloat()), 0, 255);
+          } else if (!strcmp(cmd_str, "s")) {
+            s = getValue("s", msg);
+          } else if (!strcmp(cmd_str, "l")) {
+            int led = int(getValue("l", msg).toFloat());
+            M5.Power.setLed(constrain(led, 0, 255));
+          } else if (!strcmp(cmd_str, "cat")) {
+            cat_flag = (!(getValue("cat", msg).toInt() == 0));
+          } else if (!strcmp(cmd_str, "stackchan")) {
+            stackchan_flag = (!(getValue("stackchan", msg).toInt() == 0));
+          } else if (!strcmp(cmd_str, "face_mode")) {
+            face_flag = (!(getValue("face_mode", msg).toInt() == 0));
+          } else if (!strcmp(cmd_str, "soe")) {
+            if (face_flag && !(getValue("soe", msg).toInt() == 0)) {
+              draw_openeye();
+            }
+          } else if (!strcmp(cmd_str, "sce")) {
+            if (face_flag && !(getValue("sce", msg).toInt() == 0)) {
+              draw_closeeye();
+            }
+          } else if (!strcmp(cmd_str, "som")) {
+            if (face_flag && !(getValue("som", msg).toInt() == 0)) {
+              draw_openmouth();
+            }
+          } else if (!strcmp(cmd_str, "scm")) {
+            if (face_flag && !(getValue("scm", msg).toInt() == 0)) {
+              draw_closemouth();
+            }
           }
-        } else if (!strcmp(cmd_str, "som")) {
-          if (face_flag && !(getValue("som", msg).toInt() == 0)) {
-            draw_openmouth();
-          }
-        } else if (!strcmp(cmd_str, "scm")) {
-          if (face_flag && !(getValue("scm", msg).toInt() == 0)) {
-            draw_closemouth();
+          log_i("msg:\"%s\"\n", msg);
+
+          // Skip var_value
+          while (msg.charAt(0) != ' ' && msg.length() > 0) {
+            msg = msg.substring(1);
           }
         }
-        log_i("msg:\"%s\"\n", msg);
 
-        // Skip var_value
-        while (msg.charAt(0) != ' ' && msg.length() > 0) {
-          msg = msg.substring(1);
-        }
-      }
+        send_M5Stack_data();
 
-      send_M5Stack_data();
-
-      //// Output
-      // RGB background
+        //// Output
+        // RGB background
 
 #if !defined(CONFIG_IDF_TARGET_ESP32S3)
-      // Fill background (r,g,b) for ATOM Matrix
-      if (myBoard == m5gfx::board_M5Atom) {
-        for (int i = 0; i < NUM_LEDS; i++) {
-          leds[i] = CRGB(r, g, b);
+        // Fill background (r,g,b) for ATOM Matrix
+        if (myBoard == m5gfx::board_M5Atom) {
+          for (int i = 0; i < NUM_LEDS; i++) {
+            leds[i] = CRGB(r, g, b);
+          }
+          FastLED.show();
         }
-        FastLED.show();
-      }
 #endif
 
-      int rgb = uint16_t(((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3));
+        int rgb = uint16_t(((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3));
 
-      // Fill background (r,g,b) for other boards.
-      //M5.Lcd.fillScreen(rgb);
+        // Fill background (r,g,b) for other boards.
+        //M5.Lcd.fillScreen(rgb);
 
-      // Draw top right circle
-      int circle_r = 20;
-      M5.Lcd.fillCircle(screen_w - circle_r, circle_r, circle_r, rgb);
+        // Draw top right circle
+        int circle_r = 20;
+        M5.Lcd.fillCircle(screen_w - circle_r, circle_r, circle_r, rgb);
 
-      if (debug_mode) {
-        M5.Lcd.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
+        if (debug_mode) {
+          M5.Lcd.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
+        }
+        log_i("RGB:(%d,%d,%d)\n", r, g, b);
+
+        // Draw cat
+        if (cat_flag) {
+          M5.Lcd.drawPng(cat, ~0u,            // Data
+                         x, y,                // Position
+                         screen_w, screen_h,  // Size
+                         0, 0,                // Offset
+                         z, 0,                // Magnify
+                         datum_t::top_left);
+        }
+
+        // Draw Stackchan
+        if (stackchan_flag) {
+          M5.Lcd.drawPng(stackchan, ~0u,      // Data
+                         x, y,                // Position
+                         screen_w, screen_h,  // Size
+                         0, 0,                // Offset
+                         z, 0,                // Magnify
+                         datum_t::top_left);
+        }
+
+        // msg
+        //M5.Lcd.setCursor(0, 100);
+        //M5.Lcd.setTextSize(5);
+        if (debug_mode) {
+          M5.Lcd.println("s:\"" + s + "\"");
+        }
+      } else {
+        log_i("NOP\n");
       }
-      log_i("RGB:(%d,%d,%d)\n", r, g, b);
 
-      // Draw cat
-      if (cat_flag) {
-        M5.Lcd.drawPng(cat, ~0u,            // Data
-                       x, y,                // Position
-                       screen_w, screen_h,  // Size
-                       0, 0,                // Offset
-                       z, 0,                // Magnify
-                       datum_t::top_left);
-      }
-
-      // Draw Stackchan
-      if (stackchan_flag) {
-        M5.Lcd.drawPng(stackchan, ~0u,      // Data
-                       x, y,                // Position
-                       screen_w, screen_h,  // Size
-                       0, 0,                // Offset
-                       z, 0,                // Magnify
-                       datum_t::top_left);
-      }
-
-      // msg
-      //M5.Lcd.setCursor(0, 100);
-      //M5.Lcd.setTextSize(5);
-      if (debug_mode) {
-        M5.Lcd.println("s:\"" + s + "\"");
-      }
-    } else {
-      log_i("NOP\n");
+      len = msg.length();
     }
-
+    rcv_len = receive_msg(buffer);
+    msg = create_msg(buffer, rcv_len);
     len = msg.length();
   }
 
