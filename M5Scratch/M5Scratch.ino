@@ -379,6 +379,12 @@ void send_sensor_update() {
   float gx = 0, gy = 0, gz = 0;  // Gyro
   float temp = 0;                // Temperature
 
+  // Update button and touch panel data
+  M5.update();
+  if (myBoard == m5gfx::board_M5Dial) {
+    M5Dial.update();
+  }
+
   M5.Imu.getAccel(&ax, &ay, &az);  // get accel
   M5.Imu.getGyro(&gx, &gy, &gz);   // get gyro
   M5.Imu.getTemp(&temp);           // get temperature
@@ -470,11 +476,6 @@ void loop() {
   uint8_t buffer[512] = { 0 };
   int r = 0, g = 0, b = 0;
   String s;
-
-  M5.update();
-  if (myBoard == m5gfx::board_M5Dial) {
-    M5Dial.update();
-  }
 
   client_connect();
 
