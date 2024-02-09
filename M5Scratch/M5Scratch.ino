@@ -49,7 +49,7 @@ bool debug_mode = false;                     // Debug mode: show some useful var
 int screen_w = 320;
 int screen_h = 240;
 // Analog pin number
-int analogPin;
+int analogPin = -1;
 
 //// Draw images.
 // Draw cat image.
@@ -425,7 +425,9 @@ void send_sensor_update() {
   sensor_update("temp", String(temp));
 
   // sensor-update analog in
-  sensor_update("slider", String(analogRead(analogPin)));
+  if (analogPin != -1) {
+    sensor_update("slider", String(analogRead(analogPin)));
+  }
 
   end_sensor_update();
 }
