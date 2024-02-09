@@ -498,6 +498,28 @@ void loop() {
           M5.Lcd.println("broadcast:\"" + msg + "\"");
         }
         msg.replace("broadcast ", "");
+
+        //// Command handler
+        // Get command
+        msg.trim();
+        int i = 0;
+        char cmd_str[512] = { 0 };
+        for (i = 0; i < msg.length() && msg.charAt(i) != ' '; i++) {
+          cmd_str[i] = msg.charAt(i);
+        }
+        cmd_str[i] = 0;
+        log_i("CMD STR:%s\n", cmd_str);
+
+        if (face_flag && !strcmp(cmd_str, "soe")) {
+          draw_openeye();
+        } else if (face_flag && !strcmp(cmd_str, "sce")) {
+          draw_closeeye();
+        } else if (face_flag && !strcmp(cmd_str, "som")) {
+          draw_openmouth();
+        } else if (face_flag && !strcmp(cmd_str, "scm")) {
+          draw_closemouth();
+        }
+
         msg = "";
         len = 0;
       } else if (msg.startsWith("sensor-update")) {
@@ -544,24 +566,8 @@ void loop() {
             stackchan_flag = (!(getValue("stackchan", msg).toInt() == 0));
           } else if (!strcmp(cmd_str, "face_mode")) {
             face_flag = (!(getValue("face_mode", msg).toInt() == 0));
-          } else if (!strcmp(cmd_str, "soe")) {
-            if (face_flag && !(getValue("soe", msg).toInt() == 0)) {
-              draw_openeye();
-            }
-          } else if (!strcmp(cmd_str, "sce")) {
-            if (face_flag && !(getValue("sce", msg).toInt() == 0)) {
-              draw_closeeye();
-            }
-          } else if (!strcmp(cmd_str, "som")) {
-            if (face_flag && !(getValue("som", msg).toInt() == 0)) {
-              draw_openmouth();
-            }
-          } else if (!strcmp(cmd_str, "scm")) {
-            if (face_flag && !(getValue("scm", msg).toInt() == 0)) {
-              draw_closemouth();
-            }
-          }
-          log_i("msg:\"%s\"\n", msg);
+          } else
+            log_i("msg:\"%s\"\n", msg);
 
           // Skip var_value
           while (msg.charAt(0) != ' ' && msg.length() > 0) {
