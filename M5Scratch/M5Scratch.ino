@@ -561,6 +561,13 @@ void loop() {
           } else if (!strcmp(cmd_str, "l")) {
             int led = int(getValue("l", msg).toFloat());
             M5.Power.setLed(constrain(led, 0, 255));
+          } else if (!strcmp(cmd_str, "tone")) {
+            if (M5.Speaker.isPlaying()) {
+              M5.Speaker.stop();
+            }
+            M5.Speaker.tone(int(getValue("tone", msg).toFloat()));
+          } else if (!strcmp(cmd_str, "vol")) {
+            M5.Speaker.setVolume(int(getValue("vol", msg).toFloat()));
           } else if (!strcmp(cmd_str, "cat")) {
             cat_flag = (!(getValue("cat", msg).toInt() == 0));
           } else if (!strcmp(cmd_str, "stackchan")) {
