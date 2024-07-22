@@ -27,6 +27,8 @@ const int Port = 42001;  // Scratch remote sensor port
 #include <SD.h>
 #include <M5Unified.h>
 #include <M5Dial.h>
+#include <M5StackUpdater.h>
+
 #include <nvs.h>
 #include <WiFi.h>
 #include <Wire.h>
@@ -108,6 +110,7 @@ void setup_M5Stack() {
   // Init M5
   auto cfg = M5.config();
   M5.begin(cfg);
+  checkSDUpdater(SD, MENU_BIN, 2000);
   M5.Display.init();
   screen_w = M5.Lcd.width();
   screen_h = M5.Lcd.height();
