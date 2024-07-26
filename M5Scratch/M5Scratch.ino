@@ -33,6 +33,19 @@ const int Port = 42001;  // Scratch remote sensor port
 #include <WiFi.h>
 #include <Wire.h>
 
+// Servo
+#include <ServoEasing.hpp>
+#define START_DEGREE_VALUE_X 90
+#define START_DEGREE_VALUE_Y 85
+enum { SERVO_X_AXIS,
+       SERVO_Y_AXIS };
+ServoEasing servo_x;
+ServoEasing servo_y;
+
+// Pin setting
+//// PortB A/D I/O, GPIO I/O, PWM, Servo, etc.
+int pin[4];  // I use Port.A and Port.B only.
+
 #define FACES_KEYBOARD_I2C_ADDR 0x08
 
 #if !defined(CONFIG_IDF_TARGET_ESP32S3)
@@ -50,8 +63,10 @@ bool debug_mode = false;                     // Debug mode: show some useful var
 // Screen size
 int screen_w = 320;
 int screen_h = 240;
+/*
 // Analog pin number
 int analogPin = -1;
+*/
 
 //// Draw images.
 // Draw cat image.
@@ -106,6 +121,23 @@ void draw_openmouth() {
   M5.Lcd.fillRect(norm_x(140), norm_y(130), norm_x(40), norm_y(40), TFT_WHITE);
 }
 
+// for servo handling
+void moveServo(int servo_angle, int axis) {
+  log_i(" Servo angle: %d, Axis: %d\n", servo_angle, axis);
+
+  if (axis == SERVO_X_AXIS) {
+    servo_x.attach(pin[axis], START_DEGREE_VALUE_X, DEFAULT_MICROSECONDS_FOR_0_DEGREE, DEFAULT_MICROSECONDS_FOR_180_DEGREE);
+    servo_x.setEasingType(EASE_QUADRATIC_IN_OUT);
+    setSpeedForAllServos(30);
+    servo_x.startEaseTo(servo_angle);
+  } else if (axis == SERVO_Y_AXIS) {
+    servo_y.attach(pin[axis], START_DEGREE_VALUE_Y, DEFAULT_MICROSECONDS_FOR_0_DEGREE, DEFAULT_MICROSECONDS_FOR_180_DEGREE);
+    servo_y.setEasingType(EASE_QUADRATIC_IN_OUT);
+    setSpeedForAllServos(30);
+    servo_y.startEaseTo(servo_angle);
+  }
+}
+
 void setup_M5Stack() {
   // Init M5
   auto cfg = M5.config();
@@ -134,6 +166,7 @@ void setup_M5Stack() {
   }
 #endif
 
+  /*
   // Analog pin setting
   switch (myBoard) {
     case m5gfx::board_M5Atom:
@@ -170,6 +203,7 @@ void setup_M5Stack() {
     default:
       break;
   }
+*/
 
   // Wire setup for M5Stack face keyboard.
   Wire.begin();
@@ -207,6 +241,7 @@ void setup_WiFi() {
       for (hostip_pos = ssid_pos; buf[hostip_pos] != 0; hostip_pos++) {}
       hostip_pos++;
       WiFi.begin(buf, &buf[ssid_pos]);
+      log_i("SD: SSID:%s, Password:%s\n", buf, &buf[ssid_pos]);
 
       // Seting up Scratch host IP from SD card.
       int i = 0;
@@ -215,6 +250,7 @@ void setup_WiFi() {
         i++;
       }
       host[i] = 0;  // NULL terminate.
+      log_i("SD ScratchHost IP: %s\n", host);
     }
 
     // Save Scratch host IP to NVS.
@@ -222,6 +258,7 @@ void setup_WiFi() {
     if (ESP_OK == nvs_open("ScratchHost", NVS_READWRITE, &nvs_handle)) {
       nvs_set_str(nvs_handle, "ScratchHost", host);
     }
+    log_i("NVS save ScratchHost IP: %s\n", host);
   } else {
 #if defined(WIFI_MODE_PREV)
     WiFi.begin();  // Use privious setting.
@@ -244,7 +281,7 @@ void setup_WiFi() {
             host[i] = scratchhost_ip[i];
           }
           host[i] = 0;  // NULL terminate
-          log_i("Host IP:%s\n", host);
+          log_i("NVS load ScratchHost IP:%s\n", host);
         }
       }
       nvs_close(nvs_handle);
@@ -260,6 +297,98 @@ void setup_WiFi() {
   log_i("Wifi OK\n");
 }
 
+void setup_servo() {
+  // Servo
+  moveServo(START_DEGREE_VALUE_X, 0);
+  moveServo(START_DEGREE_VALUE_Y, 1);
+}
+
+void setup_pins() {
+  //// GPIO
+// Dirty hack for CoreS3, M5Dial and StampS3
+#if !defined(GPIO_NUM_22)
+#define GPIO_NUM_22 22
+#endif
+#if !defined(GPIO_NUM_25)
+#define GPIO_NUM_25 25
+#endif
+
+  switch (myBoard) {
+    case m5gfx::board_M5Atom:
+    case m5gfx::board_M5AtomU:
+    case m5gfx::board_M5AtomPsram:
+      // Port.A (Universal)
+      pin[0] = GPIO_NUM_32;
+      pin[1] = GPIO_NUM_26;
+      break;
+
+    case m5gfx::board_M5Stack:
+      // Port.B
+      pin[0] = GPIO_NUM_36;
+      pin[1] = GPIO_NUM_26;
+      // Port.A
+      pin[2] = GPIO_NUM_22;
+      pin[3] = GPIO_NUM_21;
+      break;
+
+    case m5gfx::board_M5StackCore2:
+    case m5gfx::board_M5Tough:
+      // Port.A
+      pin[0] = GPIO_NUM_33;
+      pin[1] = GPIO_NUM_32;
+      // Port.B
+      pin[2] = GPIO_NUM_36;
+      pin[3] = GPIO_NUM_26;
+      break;
+
+    case m5gfx::board_M5StickC:
+    case m5gfx::board_M5StickCPlus:
+    case m5gfx::board_M5StickCPlus2:
+    case m5gfx::board_M5StackCoreInk:
+      // Port.A (Universal)
+      pin[0] = GPIO_NUM_33;
+      pin[1] = GPIO_NUM_32;
+      break;
+
+    case m5gfx::board_M5Paper:
+      // Port.A
+      pin[0] = GPIO_NUM_32;
+      pin[1] = GPIO_NUM_25;
+      // Port.B
+      pin[2] = GPIO_NUM_33;
+      pin[3] = GPIO_NUM_26;
+      break;
+
+    case m5gfx::board_M5StackCoreS3:
+      // Port.A
+      pin[0] = GPIO_NUM_1;
+      pin[1] = GPIO_NUM_2;
+      // Port.B
+      pin[2] = GPIO_NUM_8;
+      pin[3] = GPIO_NUM_9;
+      break;
+
+    case m5gfx::board_M5Dial:
+      // Port.A
+      pin[0] = GPIO_NUM_1;
+      pin[1] = GPIO_NUM_2;
+      // Port.B
+      pin[2] = GPIO_NUM_15;
+      pin[3] = GPIO_NUM_13;
+      break;
+
+    case m5gfx::board_M5AtomS3:
+    case m5gfx::board_M5Cardputer:
+      // Port.A (Universal)
+      pin[0] = GPIO_NUM_1;
+      pin[1] = GPIO_NUM_2;
+      break;
+
+    default:
+      break;
+  }
+}
+
 void setup() {
   // Init Serial
   Serial.begin(115200);
@@ -267,6 +396,8 @@ void setup() {
   M5.Lcd.println("Welcome to Scratch Remoto Sensor!!");
   setup_WiFi();
   log_i("Scratch Host IP is {%s}\n", host);
+  setup_pins();
+  setup_servo();
 }
 
 String getValue(char* name, String msg) {
@@ -433,10 +564,12 @@ void send_sensor_update() {
   }
   sensor_update("temp", String(temp));
 
+  /*
   // sensor-update analog in
   if (analogPin != -1) {
     sensor_update("slider", String(analogRead(analogPin)));
   }
+*/
 
   end_sensor_update();
 }
@@ -578,6 +711,12 @@ void loop() {
             stackchan_flag = (!(getValue("stackchan", msg).toInt() == 0));
           } else if (!strcmp(cmd_str, "face_mode")) {
             face_flag = (!(getValue("face_mode", msg).toInt() == 0));
+          } else if (!strcmp(cmd_str, "servo_x")) {
+            int angle = int(getValue("servo_x", msg).toFloat());
+            moveServo(angle, SERVO_X_AXIS);
+          } else if (!strcmp(cmd_str, "servo_y")) {
+            int angle = int(getValue("servo_y", msg).toFloat());
+            moveServo(angle, SERVO_Y_AXIS);
           } else
             log_i("msg:\"%s\"\n", msg);
 
