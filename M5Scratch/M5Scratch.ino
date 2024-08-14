@@ -443,7 +443,6 @@ void send_sensor_update() {
 void send_M5Stack_data() {
   send_broadcast();
   send_sensor_update();
-  delay(100);
 }
 
 int receive_msg(uint8_t* buffer) {
