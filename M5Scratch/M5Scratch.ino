@@ -452,13 +452,13 @@ int receive_msg(uint8_t* buffer) {
 
   int av = client.available();
   log_i("available:%d\n", av);
-  //if (av > 0) {
-  client.readBytes(header, 4);  // Read length of command.
-  uint32_t cmd_size = header[3] | (header[2] << 8) | (header[1] << 16) | (header[0] << 24);
-  log_i("cmd_size:%d\n", cmd_size);
-  len = client.readBytes(buffer, cmd_size);
-  log_i("buffer:%s\n", buffer);
-  //}
+  if (av > 0) {
+    client.readBytes(header, 4);  // Read length of command.
+    uint32_t cmd_size = header[3] | (header[2] << 8) | (header[1] << 16) | (header[0] << 24);
+    log_i("cmd_size:%d\n", cmd_size);
+    len = client.readBytes(buffer, cmd_size);
+    log_i("buffer:%s\n", buffer);
+  }
   return (len);
 }
 
