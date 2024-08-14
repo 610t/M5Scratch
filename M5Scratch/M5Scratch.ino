@@ -416,8 +416,6 @@ void broadcast(String msg) {
   //scmd[3] = (uint8_t)strlen(scmd + 4);
   scmd[3] = cmd.length();
   log_i(">pre broadcast:%s\n", scmd + 4);
-  client.setTimeout(100);
-  //  if (client.write((const uint8_t*)scmd, 4 + strlen(scmd + 4))) {
   if (client.write((const uint8_t*)scmd, 4 + cmd.length())) {
     log_i(">>broadcast:%s ok\n", msg);
   } else {
@@ -441,7 +439,6 @@ void end_sensor_update() {
   scmd[2] = (strlen(scmd + 4) >> 8) & 0xff;
   scmd[1] = (strlen(scmd + 4) >> 16) & 0xff;
   scmd[0] = (strlen(scmd + 4) >> 24) & 0xff;
-  client.setTimeout(100);
   if (client.write((const uint8_t*)scmd, 4 + strlen(scmd + 4))) {
     //log_i("sensor-update ok\n");
     return;
@@ -472,11 +469,13 @@ void client_connect() {
     log_i("Stop connection\n");
     client.stop();
     log_i("Before client.connect\n");
-    //client.setTimeout(100);
     client.connect(host, Port);
     log_i("After client.connect\n");
   }
   log_i("Client connected\n");
+
+  client.setTimeout(1);
+  client.setNoDelay(true);
 }
 
 void send_broadcast() {
@@ -577,7 +576,6 @@ void send_sensor_update() {
 void send_M5Stack_data() {
   send_broadcast();
   send_sensor_update();
-  delay(100);
 }
 
 int receive_msg(uint8_t* buffer) {
@@ -586,14 +584,13 @@ int receive_msg(uint8_t* buffer) {
 
   int av = client.available();
   log_i("available:%d\n", av);
-  //if (av > 0) {
-  client.setTimeout(100);
-  client.readBytes(header, 4);  // Read length of command.
-  uint32_t cmd_size = header[3] | (header[2] << 8) | (header[1] << 16) | (header[0] << 24);
-  log_i("cmd_size:%d\n", cmd_size);
-  len = client.readBytes(buffer, cmd_size);
-  log_i("buffer:%s\n", buffer);
-  //}
+  if (av > 0) {
+    client.readBytes(header, 4);  // Read length of command.
+    uint32_t cmd_size = header[3] | (header[2] << 8) | (header[1] << 16) | (header[0] << 24);
+    log_i("cmd_size:%d\n", cmd_size);
+    len = client.readBytes(buffer, cmd_size);
+    log_i("buffer:%s\n", buffer);
+  }
   return (len);
 }
 
@@ -621,9 +618,16 @@ void loop() {
 
   log_i("Let us go to read messages.\n");
 
-  int rcv_len = receive_msg(buffer);
-  msg = create_msg(buffer, rcv_len);
-  int len = msg.length();
+  int len = 0;
+  int rcv_len = 0;
+
+  // Send data from M5Stack to Scratch before receiving data from Scratch.
+  while (len == 0) {
+    rcv_len = receive_msg(buffer);
+    msg = create_msg(buffer, rcv_len);
+    len = msg.length();
+    send_M5Stack_data();
+  }
 
   while (len > 0) {
     while (len > 0) {
