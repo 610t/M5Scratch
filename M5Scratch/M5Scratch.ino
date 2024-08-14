@@ -486,9 +486,16 @@ void loop() {
 
   log_i("Let us go to read messages.\n");
 
-  int rcv_len = receive_msg(buffer);
-  msg = create_msg(buffer, rcv_len);
-  int len = msg.length();
+  int len = 0;
+  int rcv_len = 0;
+
+  // Send data from M5Stack to Scratch before receiving data from Scratch.
+  while (len == 0) {
+    rcv_len = receive_msg(buffer);
+    msg = create_msg(buffer, rcv_len);
+    len = msg.length();
+    send_M5Stack_data();
+  }
 
   while (len > 0) {
     while (len > 0) {
