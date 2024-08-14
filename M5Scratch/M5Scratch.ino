@@ -497,163 +497,158 @@ void loop() {
   }
 
   while (len > 0) {
-    while (len > 0) {
-      M5.Lcd.setCursor(0, 0);
+    M5.Lcd.setCursor(0, 0);
 
-      if (msg.startsWith("broadcast") == true) {
-        // message
-        log_i("broadcast:\"%s\"\n", msg);
-        if (debug_mode) {
-          M5.Lcd.println("broadcast:\"" + msg + "\"");
-        }
-        msg.replace("broadcast ", "");
+    if (msg.startsWith("broadcast") == true) {
+      // message
+      log_i("broadcast:\"%s\"\n", msg);
+      if (debug_mode) {
+        M5.Lcd.println("broadcast:\"" + msg + "\"");
+      }
+      msg.replace("broadcast ", "");
+
+      //// Command handler
+      // Get command
+      msg.trim();
+      int i = 0;
+      char cmd_str[512] = { 0 };
+      for (i = 0; i < msg.length() && msg.charAt(i) != ' '; i++) {
+        cmd_str[i] = msg.charAt(i);
+      }
+      cmd_str[i] = 0;
+      log_i("CMD STR:%s\n", cmd_str);
+
+      if (face_flag && !strcmp(cmd_str, "soe")) {
+        draw_openeye();
+      } else if (face_flag && !strcmp(cmd_str, "sce")) {
+        draw_closeeye();
+      } else if (face_flag && !strcmp(cmd_str, "som")) {
+        draw_openmouth();
+      } else if (face_flag && !strcmp(cmd_str, "scm")) {
+        draw_closemouth();
+      }
+
+      msg = "";
+      len = 0;
+    } else if (msg.startsWith("sensor-update")) {
+      // value
+      msg.replace("sensor-update ", "");
+      //M5.Lcd.println("sensor-update\"" + msg + "\"");
+
+      while (msg.length() > 0) {
+        char cmd_str[512] = { 0 };
 
         //// Command handler
         // Get command
         msg.trim();
         int i = 0;
-        char cmd_str[512] = { 0 };
         for (i = 0; i < msg.length() && msg.charAt(i) != ' '; i++) {
           cmd_str[i] = msg.charAt(i);
         }
         cmd_str[i] = 0;
         log_i("CMD STR:%s\n", cmd_str);
 
-        if (face_flag && !strcmp(cmd_str, "soe")) {
-          draw_openeye();
-        } else if (face_flag && !strcmp(cmd_str, "sce")) {
-          draw_closeeye();
-        } else if (face_flag && !strcmp(cmd_str, "som")) {
-          draw_openmouth();
-        } else if (face_flag && !strcmp(cmd_str, "scm")) {
-          draw_closemouth();
-        }
-
-        msg = "";
-        len = 0;
-      } else if (msg.startsWith("sensor-update")) {
-        // value
-        msg.replace("sensor-update ", "");
-        //M5.Lcd.println("sensor-update\"" + msg + "\"");
-
-        while (msg.length() > 0) {
-          char cmd_str[512] = { 0 };
-
-          //// Command handler
-          // Get command
-          msg.trim();
-          int i = 0;
-          for (i = 0; i < msg.length() && msg.charAt(i) != ' '; i++) {
-            cmd_str[i] = msg.charAt(i);
+        // Do command.
+        if (!strcmp(cmd_str, "debug")) {
+          debug_mode = (!(getValue("debug", msg).toInt() == 0));
+        } else if (!strcmp(cmd_str, "x")) {
+          x = constrain(int(getValue("x", msg).toFloat()), -240, 240);
+        } else if (!strcmp(cmd_str, "y")) {
+          y = constrain(int(getValue("y", msg).toFloat()), -180, 180);
+        } else if (!strcmp(cmd_str, "z")) {
+          z = constrain(getValue("z", msg).toFloat(), 1, 10);
+        } else if (!strcmp(cmd_str, "r")) {
+          r = constrain(int(getValue("r", msg).toFloat()), 0, 255);
+        } else if (!strcmp(cmd_str, "g")) {
+          g = constrain(int(getValue("g", msg).toFloat()), 0, 255);
+        } else if (!strcmp(cmd_str, "b")) {
+          b = constrain(int(getValue("b", msg).toFloat()), 0, 255);
+        } else if (!strcmp(cmd_str, "s")) {
+          s = getValue("s", msg);
+        } else if (!strcmp(cmd_str, "l")) {
+          int led = int(getValue("l", msg).toFloat());
+          M5.Power.setLed(constrain(led, 0, 255));
+        } else if (!strcmp(cmd_str, "tone")) {
+          if (M5.Speaker.isPlaying()) {
+            M5.Speaker.stop();
           }
-          cmd_str[i] = 0;
-          log_i("CMD STR:%s\n", cmd_str);
+          M5.Speaker.tone(int(getValue("tone", msg).toFloat()));
+        } else if (!strcmp(cmd_str, "vol")) {
+          M5.Speaker.setVolume(int(getValue("vol", msg).toFloat()));
+        } else if (!strcmp(cmd_str, "cat")) {
+          cat_flag = (!(getValue("cat", msg).toInt() == 0));
+        } else if (!strcmp(cmd_str, "stackchan")) {
+          stackchan_flag = (!(getValue("stackchan", msg).toInt() == 0));
+        } else if (!strcmp(cmd_str, "face_mode")) {
+          face_flag = (!(getValue("face_mode", msg).toInt() == 0));
+        } else
+          log_i("msg:\"%s\"\n", msg);
 
-          // Do command.
-          if (!strcmp(cmd_str, "debug")) {
-            debug_mode = (!(getValue("debug", msg).toInt() == 0));
-          } else if (!strcmp(cmd_str, "x")) {
-            x = constrain(int(getValue("x", msg).toFloat()), -240, 240);
-          } else if (!strcmp(cmd_str, "y")) {
-            y = constrain(int(getValue("y", msg).toFloat()), -180, 180);
-          } else if (!strcmp(cmd_str, "z")) {
-            z = constrain(getValue("z", msg).toFloat(), 1, 10);
-          } else if (!strcmp(cmd_str, "r")) {
-            r = constrain(int(getValue("r", msg).toFloat()), 0, 255);
-          } else if (!strcmp(cmd_str, "g")) {
-            g = constrain(int(getValue("g", msg).toFloat()), 0, 255);
-          } else if (!strcmp(cmd_str, "b")) {
-            b = constrain(int(getValue("b", msg).toFloat()), 0, 255);
-          } else if (!strcmp(cmd_str, "s")) {
-            s = getValue("s", msg);
-          } else if (!strcmp(cmd_str, "l")) {
-            int led = int(getValue("l", msg).toFloat());
-            M5.Power.setLed(constrain(led, 0, 255));
-          } else if (!strcmp(cmd_str, "tone")) {
-            if (M5.Speaker.isPlaying()) {
-              M5.Speaker.stop();
-            }
-            M5.Speaker.tone(int(getValue("tone", msg).toFloat()));
-          } else if (!strcmp(cmd_str, "vol")) {
-            M5.Speaker.setVolume(int(getValue("vol", msg).toFloat()));
-          } else if (!strcmp(cmd_str, "cat")) {
-            cat_flag = (!(getValue("cat", msg).toInt() == 0));
-          } else if (!strcmp(cmd_str, "stackchan")) {
-            stackchan_flag = (!(getValue("stackchan", msg).toInt() == 0));
-          } else if (!strcmp(cmd_str, "face_mode")) {
-            face_flag = (!(getValue("face_mode", msg).toInt() == 0));
-          } else
-            log_i("msg:\"%s\"\n", msg);
-
-          // Skip var_value
-          while (msg.charAt(0) != ' ' && msg.length() > 0) {
-            msg = msg.substring(1);
-          }
+        // Skip var_value
+        while (msg.charAt(0) != ' ' && msg.length() > 0) {
+          msg = msg.substring(1);
         }
-
-        send_M5Stack_data();
-
-        //// Output
-        // RGB background
-
-#if !defined(CONFIG_IDF_TARGET_ESP32S3)
-        // Fill background (r,g,b) for ATOM Matrix
-        if (myBoard == m5gfx::board_M5Atom) {
-          for (int i = 0; i < NUM_LEDS; i++) {
-            leds[i] = CRGB(r, g, b);
-          }
-          FastLED.show();
-        }
-#endif
-
-        int rgb = uint16_t(((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3));
-
-        // Fill background (r,g,b) for other boards.
-        //M5.Lcd.fillScreen(rgb);
-
-        // Draw top right circle
-        int circle_r = 20;
-        M5.Lcd.fillCircle(screen_w - circle_r, circle_r, circle_r, rgb);
-
-        if (debug_mode) {
-          M5.Lcd.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
-        }
-        log_i("RGB:(%d,%d,%d)\n", r, g, b);
-
-        // Draw cat
-        if (cat_flag) {
-          M5.Lcd.drawPng(cat, ~0u,            // Data
-                         x, y,                // Position
-                         screen_w, screen_h,  // Size
-                         0, 0,                // Offset
-                         z, 0,                // Magnify
-                         datum_t::top_left);
-        }
-
-        // Draw Stackchan
-        if (stackchan_flag) {
-          M5.Lcd.drawPng(stackchan, ~0u,      // Data
-                         x, y,                // Position
-                         screen_w, screen_h,  // Size
-                         0, 0,                // Offset
-                         z, 0,                // Magnify
-                         datum_t::top_left);
-        }
-
-        // msg
-        //M5.Lcd.setCursor(0, 100);
-        //M5.Lcd.setTextSize(5);
-        if (debug_mode) {
-          M5.Lcd.println("s:\"" + s + "\"");
-        }
-      } else {
-        log_i("NOP\n");
       }
 
-      len = msg.length();
+      send_M5Stack_data();
+
+      //// Output
+      // RGB background
+
+#if !defined(CONFIG_IDF_TARGET_ESP32S3)
+      // Fill background (r,g,b) for ATOM Matrix
+      if (myBoard == m5gfx::board_M5Atom) {
+        for (int i = 0; i < NUM_LEDS; i++) {
+          leds[i] = CRGB(r, g, b);
+        }
+        FastLED.show();
+      }
+#endif
+
+      int rgb = uint16_t(((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3));
+
+      // Fill background (r,g,b) for other boards.
+      //M5.Lcd.fillScreen(rgb);
+
+      // Draw top right circle
+      int circle_r = 20;
+      M5.Lcd.fillCircle(screen_w - circle_r, circle_r, circle_r, rgb);
+
+      if (debug_mode) {
+        M5.Lcd.println("RGB:(" + String(r) + ", " + String(g) + ", " + String(b) + ")");
+      }
+      log_i("RGB:(%d,%d,%d)\n", r, g, b);
+
+      // Draw cat
+      if (cat_flag) {
+        M5.Lcd.drawPng(cat, ~0u,            // Data
+                       x, y,                // Position
+                       screen_w, screen_h,  // Size
+                       0, 0,                // Offset
+                       z, 0,                // Magnify
+                       datum_t::top_left);
+      }
+
+      // Draw Stackchan
+      if (stackchan_flag) {
+        M5.Lcd.drawPng(stackchan, ~0u,      // Data
+                       x, y,                // Position
+                       screen_w, screen_h,  // Size
+                       0, 0,                // Offset
+                       z, 0,                // Magnify
+                       datum_t::top_left);
+      }
+
+      // msg
+      //M5.Lcd.setCursor(0, 100);
+      //M5.Lcd.setTextSize(5);
+      if (debug_mode) {
+        M5.Lcd.println("s:\"" + s + "\"");
+      }
+    } else {
+      log_i("NOP\n");
     }
-    rcv_len = receive_msg(buffer);
-    msg = create_msg(buffer, rcv_len);
+
     len = msg.length();
   }
 
