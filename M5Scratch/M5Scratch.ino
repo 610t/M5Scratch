@@ -35,6 +35,10 @@ const int Port = 42001;  // Scratch remote sensor port
 
 #define FACES_KEYBOARD_I2C_ADDR 0x08
 
+// Reset connection parameters.
+#define RESET_CONN_ZERO_COUNT 100
+#define RESET_CONN_LONG_BUFFER 500
+
 #if !defined(CONFIG_IDF_TARGET_ESP32S3)
 // For M5Stack Atom's Matrix LED
 #include <FastLED.h>
@@ -267,6 +271,7 @@ void setup() {
   M5.Lcd.println("Welcome to Scratch Remoto Sensor!!");
   setup_WiFi();
   log_i("Scratch Host IP is {%s}\n", host);
+  client_connect();
 }
 
 String getValue(char* name, String msg) {
@@ -326,6 +331,11 @@ void sensor_update(String varName, String varValue) {
   log_i("Buffer:{%s}\n", scmd + 4);
 }
 
+void client_reconnect() {
+  client.stop();
+  client_connect();
+}
+
 void client_connect() {
   log_i("Before client connect\n");
   while (!client.connect(host, Port)) {
@@ -333,15 +343,6 @@ void client_connect() {
     log_i("connection failed\n");
   }
   log_i("create tcp ok\n");
-
-  while (!client.connected()) {
-    log_i("Stop connection\n");
-    client.stop();
-    log_i("Before client.connect\n");
-    client.connect(host, Port);
-    log_i("After client.connect\n");
-  }
-  log_i("Client connected\n");
 
   client.setTimeout(1);
   client.setNoDelay(true);
@@ -445,6 +446,8 @@ void send_M5Stack_data() {
   send_sensor_update();
 }
 
+int zero_count = 0;
+
 int receive_msg(uint8_t* buffer) {
   uint8_t header[4] = { 0 };
   int len = 0;
@@ -457,6 +460,16 @@ int receive_msg(uint8_t* buffer) {
     log_i("cmd_size:%d\n", cmd_size);
     len = client.readBytes(buffer, cmd_size);
     log_i("buffer:%s\n", buffer);
+    // If accept zero data too long time, reset connection.
+    if (zero_count > RESET_CONN_ZERO_COUNT) {
+      client_reconnect();
+      zero_count = 0;
+    }
+    zero_count++;
+  }
+  // If many data in buffer, reset connection.
+  if (av > RESET_CONN_LONG_BUFFER) {
+    client_reconnect();
   }
   return (len);
 }
@@ -477,8 +490,6 @@ void loop() {
   uint8_t buffer[512] = { 0 };
   int r = 0, g = 0, b = 0;
   String s;
-
-  client_connect();
 
   // Read all from server and print them to Serial.
   String msg = "";
@@ -651,6 +662,4 @@ void loop() {
 
     len = msg.length();
   }
-
-  client.stop();
 }
