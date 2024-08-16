@@ -177,8 +177,10 @@ void setup_M5Stack() {
 
   // Wire setup for M5Stack face keyboard.
   Wire.begin();
-  pinMode(5, INPUT);
-  digitalWrite(5, HIGH);
+  if (myBoard == m5gfx::board_M5Stack) {
+    pinMode(5, INPUT);
+    digitalWrite(5, HIGH);
+  }
 }
 
 void setup_WiFi() {
@@ -364,7 +366,6 @@ void send_broadcast() {
 
   // keyboard input
   if (myBoard == m5gfx::board_M5Stack) {
-
     if (digitalRead(5) == LOW) {
       Wire.requestFrom(FACES_KEYBOARD_I2C_ADDR, 1);
       while (Wire.available()) {
